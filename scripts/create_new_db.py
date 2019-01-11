@@ -1,12 +1,14 @@
 """
+Author: John Verwolf.
+
 This is an executable script that creates and saves
 a new DB.
 
 Example:
-    python3 populate_db.py -d ./knowledge_base/knowledge_base.db
+    python3 create_new_db.py -d ./knowledge_base/knowledge_base.db
 
     # With Spotify Credentials:
-    python3 populate_db.py -d ./knowledge_base/knowledge_base.db -s 123 123
+    python3 create_new_db.py -d ./knowledge_base/knowledge_base.db -s 123 123
 
 """
 
@@ -16,9 +18,7 @@ from argparse import ArgumentParser
 
 sys.path.append('../')
 sys.path.append('.')
-from player_adaptor.dummy_adaptor import DummyController
 from scripts import test_db_utils
-from controller.system_entry import SystemEntry
 
 
 def setup_db_with_spotify_data(spotify_client_id,
@@ -46,15 +46,6 @@ def setup_db(path: str = None):
         print("Please run cli.py from project directory!")
         sys.exit(1)
     return db_path
-
-
-def run_app(db_path):
-    player_controller = DummyController()
-    system_entry = SystemEntry(db_path, player_controller)
-    print("Welcome!")
-    for text in sys.stdin:
-        system_entry(text)
-
 
 def main():
     print("Running DB setup script...")

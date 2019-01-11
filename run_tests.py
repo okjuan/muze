@@ -1,5 +1,7 @@
 import unittest
 """
+Author: John Verwolf.
+
 Import your test below to have it automatically run
 by this test-runner.
 
