@@ -13,7 +13,6 @@ sys.path.append('../')  # if running this script from 'scripts/' directory
 sys.path.append('.')  # if running this script from project root
 sys.path.append('./scripts')  # if running this script from project root
 from knowledge_base.api import KnowledgeBaseAPI
-from utils.spotify_client import SpotifyClient
 
 pp = pprint.PrettyPrinter(
     indent=2,
@@ -173,6 +172,7 @@ def _get_artist_metadata(spotify, artist_names):
 
 
 def create_and_populate_db_with_spotify(spotify_client_id, spotify_secret_key, artists, path=None):
+    from utils.spotify_client import SpotifyClient
     path_to_db = create_db(path=path)
     artist_metadata = _get_artist_metadata(SpotifyClient(spotify_client_id, spotify_secret_key), artists)
     kb_api = KnowledgeBaseAPI(path_to_db)
