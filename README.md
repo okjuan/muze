@@ -1,6 +1,17 @@
 ## Overview
 This project consists of a semantic network of musical entities (songs, artists, genres, etc) with an API for retrieving and adding info. The included database was populated with data retrieved from Spotify's public web API. Originally, I developed this system as part of a broader [collaborative project](https://github.com/MIR-Directed-Research/intelligent-music-recommender).
 
+## Setup
+### Prerequisites
+* [SQLite3](https://www.sqlite.org/download.html)
+* [Python](https://www.python.org/downloads/) 3.5 or higher
+
+### Dependencies
+Whether or not you use a virtual environment:
+```
+pip install -r requirements.txt
+```
+
 ## API
 In general, the Knowledge Representation (KR) API exposes a collection of functions that encapsulate all SQL queries and logic relating to managing the database; through the KR API, callers may retrieve from and add information to the database. The following functions allow *addition* of information to the database through an instance `kr_api` of the `KnowledgeBaseAPI` class:
 
@@ -33,7 +44,7 @@ And the following functions allow *retrieval* of information to the database
   * The given entity may be any of song, an artist, etc. The returned entity may or may not be the same type of entity.
 
 ## Testing
-Run the tests:
+Run the tests from the project's root folder:
 ```
 $ python run_tests.py
 ...
