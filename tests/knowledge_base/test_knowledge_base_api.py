@@ -48,6 +48,16 @@ class TestMusicKnowledgeBaseAPI(unittest.TestCase):
         artist_data = self.kb_api.get_artist_data("Unknown artist")
         self.assertEqual(artist_data, [], "Expected 'None' result for unknown artist.")
 
+    def test_get_all_song_names(self):
+        expected_song_names = set(["Despacito", "Rock Your Body", "Beautiful Day", "In My Blood", "Sorry"])
+        res = self.kb_api.get_all_song_names()
+        self.assertEqual(set(res), expected_song_names, "Unexpected result from fetching all songs from db.")
+
+    def test_get_all_artist_names(self):
+        expected_artist_names = set(["Justin Bieber", "Justin Timberlake", "U2", "Shawn Mendes"])
+        res = self.kb_api.get_all_artist_names()
+        self.assertEqual(set(res), expected_artist_names, "Unexpected result from fetching all artists from db.")
+
     def test_get_songs(self):
         res = self.kb_api.get_songs_by_artist("Justin Bieber")
         self.assertEqual(res, ["Despacito", "Sorry"], "Songs retrieved for 'Justin Bieber' did not match expected.")

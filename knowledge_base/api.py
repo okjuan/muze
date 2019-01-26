@@ -67,6 +67,30 @@ class KnowledgeBaseAPI:
             print("ERROR: Could not find entities similar to entity with name '{}': {}".format(entity_name, str(e)))
             return []
 
+    def get_all_song_names(self):
+        """Gets all song names from database.
+
+        Returns:
+            (list of str): song names.
+        """
+        try:
+            # Auto-close
+            with closing(self.connection) as con:
+                # Auto-commit
+                with con:
+                    # Auto-close
+                    with closing(con.cursor()) as cursor:
+                        cursor.execute("""
+                            SELECT name
+                            FROM nodes
+                            WHERE type = "song";
+                        """)
+                        return [x[0] for x in cursor.fetchall()]
+        except sqlite3.OperationalError as e:
+            print("ERROR: Could not retrieve songs: {}".format(str(e)))
+        return []
+
+
     def get_song_data(self, song_name):
         """Gets all songs that match given name, along with their artists.
 
@@ -154,6 +178,30 @@ class KnowledgeBaseAPI:
                 genres=self.get_related_entities(artist_name, self.approved_relations["genre"]),
             ))
         return results
+
+    def get_all_artist_names(self):
+        """Get artist names.
+
+        Returns:
+            (list of str): artist names.
+        """
+        try:
+            # Auto-close.
+            with closing(self.connection) as con:
+                # Auto-commit
+                with con:
+                    # Auto-close.
+                    with closing(con.cursor()) as cursor:
+                        cursor.execute("""
+                            SELECT name
+                            FROM nodes
+                            WHERE type = "artist";
+                        """)
+                        return [x[0] for x in cursor.fetchall()]
+
+        except sqlite3.OperationalError as e:
+            print("ERROR: Could not retrieve artist data: {}".format(str(e)))
+        return []
 
     def get_songs_by_artist(self, artist):
         """Retrieves list of songs for given artist.
