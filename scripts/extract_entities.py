@@ -6,7 +6,11 @@ from knowledge_base.api import KnowledgeBaseAPI
 def print_to_csv(items, filename):
     with open(filename, "w") as f:
         for entry in items:
-            f.write(entry + "\n")
+            # CSV format with itself as synonym
+            # Truncate name to remove parentheses
+            entry_no_paren = entry.split("(")[0]
+            f.write(f"\"{entry_no_paren}\",\"{entry_no_paren}\"\n")
+
 
 
 if __name__ == "__main__":
