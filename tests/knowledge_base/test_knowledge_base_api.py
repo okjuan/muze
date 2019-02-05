@@ -95,13 +95,6 @@ class TestMusicKnowledgeBaseAPI(unittest.TestCase):
             "Expected to find Justin Timberlake as similar to Justin Bieber.",
         )
 
-    def test_get_all_music_entities(self):
-        res = self.kb_api.get_all_music_entities()
-        self.assertTrue(
-            'Justin Bieber' in res,
-            'Expected to find "Justin Bieber" in the list of entities.'
-        )
-
     def test_find_similar_to_entity_that_dne(self):
         res = self.kb_api.get_related_entities("Unknown Entity")
         self.assertEqual(res, [])

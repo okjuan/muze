@@ -33,8 +33,6 @@ In general, the Knowledge Representation (KR) API exposes a collection of functi
 
 Various functions allow *retrieval* of information to the database; some of them are described below:
 
-* `kr_api.get_all_music_entities()`: returns a list of names of all entities (songs, artists, and genres).
-  * Used by UI modules to match user input with known entities.
 * `kr_api.get_songs(artist)`: Retrieves list of song names for given artist name.
 * `kr_api.get_artist_data(artist_name)`: Retrieves associated genres, node ID, and number of Spotify followers for given artist.
 * `kr_api.get_song_data(song_name)`: Gets all songs that match given name, along with their artists.

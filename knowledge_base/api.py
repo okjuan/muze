@@ -271,31 +271,6 @@ class KnowledgeBaseAPI:
             print("ERROR: Could not retrieve ids for entity with name '{}': {}".format(entity_name, str(e)))
             return None
 
-    def get_all_music_entities(self):
-        """Gets a list of all the names, genres,
-        artists, ect. in the DB
-
-        :return: A list of all nouns in the database
-        """
-        try:
-            # Auto-close.
-            with closing(self.connection) as con:
-                # Auto-commit
-                with con:
-                    # Auto-close.
-                    with closing(con.cursor()) as cursor:
-                        cursor.execute("""
-                            SELECT name AS song_name
-                            FROM songs JOIN nodes ON node_id == id
-                            UNION
-                            SELECT name AS artist_name
-                            FROM artists JOIN nodes ON node_id == id
-                            """)
-                        return [x[0] for x in cursor.fetchall()]
-        except sqlite3.OperationalError as e:
-            print("ERROR: Could not retrieve music entities: {}".format(e))
-            return []
-
     def _get_matching_node_ids(self, node_name):
         """Retrieves IDs of all nodes matching the given name.
 
