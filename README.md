@@ -31,7 +31,7 @@ In general, the Knowledge Representation (KR) API exposes a collection of functi
 * `kr_api.connect_entities(source_node_name, dest_node_name, rel_str, score)`: Insert into `edges` table.
   * Creates an edge in semantic network with given label `rev_str` (e.g. "similar to", "of genre") and score
 
-And the following functions allow *retrieval* of information to the database
+Various functions allow *retrieval* of information to the database; some of them are described below:
 
 * `kr_api.get_all_music_entities()`: returns a list of names of all entities (songs, artists, and genres).
   * Used by UI modules to match user input with known entities.
