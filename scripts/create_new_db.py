@@ -81,7 +81,7 @@ def main():
             sys.exit()
 
         test_artists = [
-                "Raveena", "Ariana Grande", "U2",
+                "Raveena", "Ariana Grande", "Alessia Cara", "U2",
                 "Justin Timberlake", "Justin Bieber",
                 "Shawn Mendes",
         ]

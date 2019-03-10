@@ -1,6 +1,8 @@
 ## Overview
 This project consists of a semantic network of musical entities (songs, artists, genres, etc) with an API for retrieving and adding info. The included database was populated with data retrieved from Spotify's public web API. Originally, I developed this system as part of a broader [collaborative project](https://github.com/MIR-Directed-Research/intelligent-music-recommender).
 
+Additionally, a server endpoint for use by a Dialogflow agent is under construction. Specifically, the endpoint is a [webhook for fulfillment](https://dialogflow.com/docs/fulfillment) of a user request as handled by Dialogflow.
+
 ## Setup
 ### Prerequisites
 * [SQLite3](https://www.sqlite.org/download.html)
@@ -33,8 +35,6 @@ In general, the Knowledge Representation (KR) API exposes a collection of functi
 
 Various functions allow *retrieval* of information to the database; some of them are described below:
 
-* `kr_api.get_all_music_entities()`: returns a list of names of all entities (songs, artists, and genres).
-  * Used by UI modules to match user input with known entities.
 * `kr_api.get_songs(artist)`: Retrieves list of song names for given artist name.
 * `kr_api.get_artist_data(artist_name)`: Retrieves associated genres, node ID, and number of Spotify followers for given artist.
 * `kr_api.get_song_data(song_name)`: Gets all songs that match given name, along with their artists.
@@ -42,8 +42,21 @@ Various functions allow *retrieval* of information to the database; some of them
 * `kr_api.get_related_entities(entity_name, rel_str)`: Finds all entities connected to the given entity by an edge with the given label `rel_str`.
   * This implements a key part of our KR system's functionality: **querying the semantic network!**
   * The given entity may be any of song, an artist, etc. The returned entity may or may not be the same type of entity.
+* `kr_api.get_less_popular_songs(song_name)`: Finds all songs with lower Spotify popularity score
 
 ## Testing
+### Integration Tests
+This section contains instructions for testing this serverside app in connection with its corresponding Dialogflow agent. Installing [ngrok](https://ngrok.com/) is an easy way to run the service the locally and make it publicly available so that it can communicate with the Dialogflow agent.
+
+* Run the serverside app: `python server/webhook.py`
+* Run `./ngrok http 5000` to connect local server to relay server, making it publicly available
+* Copy HTTPS URL on the screen (e.g. `https://f313aea9.ngrok.io`)
+* In Dialogflow console, in Fulfillment tab, enable the Webhook option and paste the ngrok HTTPS url with `/webhook` appended to it (e.g. `https://f313aea9.ngrok.io/webhook`)
+* In Dialogflow console, enter a prompt into the test agent:
+    * Q: "Who is thank u, next by?" A: "Do you mean the song thank u, next by Ariana Grande?"
+    * Q: "Find a song like thank u, next but more obscure" A: "'How Far I'll Go - Alessia Cara Version' by Alessia Cara is similar but more obscure!"
+
+### Unit Tests
 Run the tests from the project's root folder:
 ```
 $ python run_tests.py

@@ -26,6 +26,96 @@ class KnowledgeBaseAPI:
         conn.execute("PRAGMA foreign_keys = 1")
         return conn
 
+    def _get_popularity(self, song_name):
+        """Retrieves Spotify popularity of a song.
+
+        Note: if given song corresponds to multiple entries in DB,
+            then one is chosen arbitarily.
+
+        Params:
+            song_name (str): e.g. "thank u, next"
+
+        Returns:
+            (int): Spotify popularity score (in [0,100]) of song matching given name,
+                None if not found.
+        """
+        try:
+            with closing(self.connection) as con:
+                # Auto-commit
+                with con:
+                    with closing(con.cursor()) as cursor:
+                        cursor.execute("""
+                            SELECT popularity
+                            FROM nodes JOIN songs ON id == node_id
+                            WHERE name = ?;
+                        """, (song_name,))
+                        # [(23,), (454,)] => [23, 454]
+                        res = [x[0] for x in cursor.fetchall()]
+
+        except sqlite3.OperationalError as e:
+            print("ERROR: Could not find popularity of song '{}': {}".format(song_name, str(e)))
+            return None
+
+        num_hits = len(res)
+        if num_hits < 1:
+            print(f"WARN: Could not find popularity of song '{song_name}'")
+            return None
+        elif num_hits > 1:
+            print(f"WARN: Found {num_hits} results when fetching popularity of song '{song_name}'.")
+        return res[0]
+
+    def get_less_popular_songs(self, song_name):
+        """Returns all songs with lower Spotify popularity score than given song.
+
+        Params:
+            song_name (str): e.g. "thank u, next"
+
+        Returns:
+            (list of dicts): each dict contains song_name and artist_name keys. Empty if not matches found.
+                e.g. [
+                    {
+                        id: 1,
+                        song_name: "Despacito",
+                        artist_name: "Justin Bieber",
+                        duration_ms: 11111,
+                        popularity: 100,
+                    },
+                    ...
+                ]
+        """
+        cur_popularity = self._get_popularity(song_name)
+        if cur_popularity is None:
+            print(f"ERROR: Could not get popularity of '{song_name}' to fetch less popular songs.")
+            return []
+
+        try:
+            with closing(self.connection) as con:
+                # Auto-commit
+                with con:
+                    with closing(con.cursor()) as cursor:
+                        # Inner query retrieves info about songs that are less popular
+                        cursor.execute("""
+                            SELECT x.id, x.name, x.popularity, x.duration_ms, nodes.name
+                            FROM (
+                                SELECT *
+                                FROM nodes JOIN songs on id == node_id
+                                WHERE popularity < ?
+                            ) as x JOIN nodes ON x.main_artist_id == nodes.id;
+                        """, (cur_popularity,))
+                        return [
+                            dict(
+                                id=x[0],
+                                song_name=x[1],
+                                popularity=x[2],
+                                duration_ms=x[3],
+                                artist_name=x[4],
+                            ) for x in cursor.fetchall()
+                        ]
+
+        except sqlite3.OperationalError as e:
+            print("ERROR: Could not find songs less popular than '{}': {}".format(song_name, str(e)))
+            return []
+
     def get_related_entities(self, entity_name, rel_str="similar to"):
         """Finds all entities connected to the given entity in the semantic network.
 
@@ -40,7 +130,7 @@ class KnowledgeBaseAPI:
 
         Returns:
             (list of strings): names of entities related to given entity.
-            e.g. ["Justin Timberlake", "Shawn Mendes"]
+                e.g. ["Justin Timberlake", "Shawn Mendes"]
         """
         if rel_str not in self.approved_relations.values():
             print("WARN: querying for invalid relations. Only allow: {}".format(self.approved_relations))
@@ -270,31 +360,6 @@ class KnowledgeBaseAPI:
         except sqlite3.OperationalError as e:
             print("ERROR: Could not retrieve ids for entity with name '{}': {}".format(entity_name, str(e)))
             return None
-
-    def get_all_music_entities(self):
-        """Gets a list of all the names, genres,
-        artists, ect. in the DB
-
-        :return: A list of all nouns in the database
-        """
-        try:
-            # Auto-close.
-            with closing(self.connection) as con:
-                # Auto-commit
-                with con:
-                    # Auto-close.
-                    with closing(con.cursor()) as cursor:
-                        cursor.execute("""
-                            SELECT name AS song_name
-                            FROM songs JOIN nodes ON node_id == id
-                            UNION
-                            SELECT name AS artist_name
-                            FROM artists JOIN nodes ON node_id == id
-                            """)
-                        return [x[0] for x in cursor.fetchall()]
-        except sqlite3.OperationalError as e:
-            print("ERROR: Could not retrieve music entities: {}".format(e))
-            return []
 
     def _get_matching_node_ids(self, node_name):
         """Retrieves IDs of all nodes matching the given name.
