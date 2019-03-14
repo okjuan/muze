@@ -1,11 +1,33 @@
 <html>
 <head>
-    <title>Muze Client</title>
-    <script src="https://sdk.scdn.co/spotify-player.js"></script>
-    <script src="player.js"></script>
+  <title>Muze Client</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <link rel="stylesheet" type="text/css" href="style.css" />
+
+  <script src="http://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+  <script src="https://sdk.scdn.co/spotify-player.js"></script>
+
+  <script src="player.js"></script>
+  <script src="index.js"></script>
 </head>
 <body>
-    <h1>Hello, I'm Muze!</h1>
-    <button onclick="playRandomSong()" id="play-button">Play song</button>
+  <div class="container">
+    <input id="speech" type="text">
+    <button id="rec" class="btn">Speak</button>
+    <button onclick="playRandomSong()" class="btn" id="play-button">Play song</button>
+    <div id="spokenResponse" class="spoken-response">
+      <div class="spoken-response__text"></div>
+    </div>
+  </div>
+  <div class="debug">
+    <div class="debug__btn btn">
+      Debug JSON results
+    </div>
+    <div class="debug__content">
+      <textarea id="response" cols="40" rows="20"></textarea>
+    </div>
+  </div>
+
+  <link href="https://fonts.googleapis.com/css?family=Titillium+Web:200" rel="stylesheet" type="text/css">
 </body>
 </html>
