@@ -111,7 +111,13 @@ function send() {
     data: JSON.stringify(body),
 
     success: function(data) {
-      prepareResponse(data);
+      // Try+Catch needs to be here
+      // see https://stackoverflow.com/questions/16316815/catch-statement-does-not-catch-thrown-error
+      try {
+        prepareResponse(data);
+      } catch (e) {
+        console.log(`Could not parse response: ${e}`)
+      }
     },
     error: function() {
       respond(messageInternalError);
@@ -120,11 +126,13 @@ function send() {
 }
 
 function prepareResponse(val) {
-  var debugJSON = JSON.stringify(val, undefined, 2);
-	var spokenResponse = val.queryResult.fulfillmentMessages[0].text.text[0];
-
+  var spokenResponse = val.queryResult.fulfillmentMessages[0].text.text[0];
   respond(spokenResponse);
-  debugRespond(debugJSON);
+
+  var spotify_uri = val.queryResult.fulfillmentMessages[1].linkOutSuggestion.uri;
+  playSong(spotify_uri);
+
+  debugRespond(JSON.stringify(val, undefined, 2));
 }
 
 function debugRespond(val) {

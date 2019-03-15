@@ -34,7 +34,9 @@ def get_song_info(song_name):
     if len(hits) == 0:
         return tell(f"Unfortunately, I couldn't find any info about {song_name}.")
     else:
-        return ask(f"Do you mean the song {song_name} by {hits[0]['artist_name']}?")
+        artist = hits[0]['artist_name']
+        spotify_uri = hits[0]['spotify_uri']
+        return tell(f"Playing {song_name} by {artist}?").link_out("Spotify", spotify_uri)
 
 @assist.action('Get More Obscure Song', mapping=dict(song_name='song'))
 def get_more_obscure_song(song_name):
@@ -67,7 +69,8 @@ def get_more_obscure_song(song_name):
     else:
         res_song_name = results[0]['song_name']
         res_artist_name = results[0]['artist_name']
-        return tell(f"'{res_song_name}' by {res_artist_name} is similar but more obscure!")
+        spotify_uri = results[0]['spotify_uri']
+        return tell(f"Playing {res_song_name} by {res_artist_name}?").link_out("Spotify", spotify_uri)
 
 
 if __name__ == '__main__':

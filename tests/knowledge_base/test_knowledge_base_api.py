@@ -26,6 +26,7 @@ class TestMusicKnowledgeBaseAPI(unittest.TestCase):
                 artist_name="Justin Bieber",
                 duration_ms=222222,
                 popularity=10,
+                spotify_uri='spotify:track:Despacito',
             ),
             "Found expected values for song data for 'Despacito'."
         )
@@ -206,7 +207,7 @@ class TestMusicKnowledgeBaseAPI(unittest.TestCase):
         self.assertEqual(
             alphabetized_entity_types,
             ["artist", "song"],
-            "Expected to find (exaclty) two entity types: 'artist' and 'song', but got: {}"
+            "Expected to find (exactly) two entity types: 'artist' and 'song', but got: {}"
                 .format(node_ids_dict)
         )
 
@@ -262,7 +263,13 @@ class TestMusicKnowledgeBaseAPI(unittest.TestCase):
         self.assertEqual(artist_data[0]["num_spotify_followers"], None, "Expected no genres for artist 'Heart'.")
 
     def test_add_song(self):
-        new_song_node_id = self.kb_api.add_song("Heart", "Justin Bieber", duration_ms=11111, popularity=100)
+        new_song_node_id = self.kb_api.add_song(
+            "Heart",
+            "Justin Bieber",
+            duration_ms=11111,
+            popularity=100,
+            spotify_uri="spotify:track:Heart",
+        )
         self.assertNotEqual(new_song_node_id, None, "Failed to add song 'Heart' by artist 'Justin Bieber' to knowledge base.")
 
         song_data = self.kb_api.get_song_data("Heart")
@@ -276,9 +283,10 @@ class TestMusicKnowledgeBaseAPI(unittest.TestCase):
                 song_name="Heart",
                 artist_name="Justin Bieber",
                 duration_ms=11111,
-                popularity=100
+                popularity=100,
+                spotify_uri="spotify:track:Heart",
             ),
-            "Received unexpected song data"
+            "Received unexpected song data",
         )
 
     def test_add_song_omitted_opt_params(self):
@@ -296,7 +304,8 @@ class TestMusicKnowledgeBaseAPI(unittest.TestCase):
                 song_name="What do you mean?",
                 artist_name="Justin Bieber",
                 duration_ms=None,
-                popularity=None
+                popularity=None,
+                spotify_uri=None,
             ),
             "Received unexpected song data"
         )

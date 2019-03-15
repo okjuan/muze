@@ -185,6 +185,7 @@ def create_and_populate_db_with_spotify(spotify_client_id, spotify_secret_key, a
                 artist_name,
                 song_info["popularity"],
                 song_info["duration_ms"],
+                song_info["uri"],
             )
 
         for rel_artist_name, rel_artist_info in artist_info["related_artists"].items():

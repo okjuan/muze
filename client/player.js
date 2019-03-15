@@ -67,12 +67,15 @@ const play = ({
     });
 };
 
-const playRandomSong = () => {
+const playSong = (spotify_uri) => {
+    if (spotify_uri === undefined) {
+        // Run Away With Me by Carly Rae Jepsen
+        spotify_uri = 'spotify:track:7xGfFoTpQ2E7fRF5lN10tr';
+    }
     if (player !== undefined) {
         play({
             playerInstance: player,
-            // Run Away With Me by Carly Rae Jepsen
-            spotify_uri: 'spotify:track:7xGfFoTpQ2E7fRF5lN10tr',
+            spotify_uri: spotify_uri,
         });
     } else {
         console.log("Waiting for player to load...");

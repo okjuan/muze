@@ -193,6 +193,7 @@ class KnowledgeBaseAPI:
                         artist_name: "Justin Bieber",
                         duration_ms: 11111,
                         popularity: 100,
+                        spotify_uri: 'spotify:track:6ohzjop0VYBRZ12ichlwg5'
                     },
                     ...
                 ]
@@ -205,9 +206,9 @@ class KnowledgeBaseAPI:
                     # Auto-close.
                     with closing(con.cursor()) as cursor:
                         cursor.execute("""
-                            SELECT song.name, artist.name, song.duration_ms, song.popularity, song_id
+                            SELECT song.name, artist.name, song.duration_ms, song.popularity, song_id, spotify_uri
                             FROM (
-                                SELECT name, main_artist_id, duration_ms, popularity, id as song_id
+                                SELECT name, main_artist_id, duration_ms, popularity, id as song_id, spotify_uri
                                 FROM songs JOIN nodes ON node_id == id
                                 WHERE name == (?)
                             ) AS song JOIN nodes AS artist ON main_artist_id == id;
@@ -219,6 +220,7 @@ class KnowledgeBaseAPI:
                                 duration_ms=x[2],
                                 popularity=x[3],
                                 id=x[4],
+                                spotify_uri=x[5],
                             ) for x in cursor.fetchall()
                         ]
 
@@ -512,7 +514,7 @@ class KnowledgeBaseAPI:
 
         return node_id
 
-    def add_song(self, name, artist, duration_ms=None, popularity=None):
+    def add_song(self, name, artist, duration_ms=None, popularity=None, spotify_uri=None):
         """Inserts given values into two tables: songs and nodes.
 
         Ensures that:
@@ -525,6 +527,7 @@ class KnowledgeBaseAPI:
             artist (string): e.g. "Justin Bieber"
             duration_ms (int): length of song e.g. 22222.
             popularity (int): in [0,100] range.
+            spotify_uri (str): used for streaming e.g. 'spotify:track:6ohzjop0VYBRZ12ichlwg5'
 
         Returns:
             (int): node_id corresponding to song if added or already existed; None otherwise.
@@ -552,13 +555,12 @@ class KnowledgeBaseAPI:
                 with con:
                     with closing(con.cursor()) as cursor:
                         cursor.execute("""
-                            INSERT INTO songs (main_artist_id, node_id, duration_ms, popularity)
-                            VALUES (?, ?, ?, ?);
-                        """, (artist_node_id, node_id, duration_ms, popularity))
+                            INSERT INTO songs (main_artist_id, node_id, duration_ms, popularity, spotify_uri)
+                            VALUES (?, ?, ?, ?, ?);
+                        """, (artist_node_id, node_id, duration_ms, popularity, spotify_uri))
 
         except sqlite3.OperationalError as e:
-            print("ERROR: Could not add song '{}' with artist '{}'".format(
-                name, artist))
+            print(f"ERROR: Could not add song '{name}' with artist '{artist}': {e}")
             return node_id
 
         except sqlite3.IntegrityError as e:
