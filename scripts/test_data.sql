@@ -17,10 +17,14 @@ INSERT INTO nodes (name, type, id) VALUES ("Sorry", "song", 14);
 INSERT INTO nodes (name, type, id) VALUES ("Pop", "genre", 20);
 INSERT INTO nodes (name, type, id) VALUES ("Super pop", "genre", 21);
 
-INSERT INTO songs (main_artist_id, popularity, duration_ms, node_id) VALUES (1, 10, 222222, 10);
-INSERT INTO songs (main_artist_id, popularity, duration_ms, node_id) VALUES (1, 20, 333333, 14);
-INSERT INTO songs (main_artist_id, popularity, duration_ms, node_id) VALUES (2, 30, 444444, 11);
-INSERT INTO songs (main_artist_id, popularity, duration_ms, node_id) VALUES (3, 60, 111111, 12);
+INSERT INTO songs (main_artist_id, popularity, duration_ms, node_id, spotify_uri)
+    VALUES (1, 10, 222222, 10, 'spotify:track:Despacito');
+INSERT INTO songs (main_artist_id, popularity, duration_ms, node_id, spotify_uri)
+    VALUES (1, 20, 333333, 14, 'spotify:track:Sorry');
+INSERT INTO songs (main_artist_id, popularity, duration_ms, node_id, spotify_uri)
+    VALUES (2, 30, 444444, 11, 'spotify:track:RockYourBody');
+INSERT INTO songs (main_artist_id, popularity, duration_ms, node_id, spotify_uri)
+    VALUES (3, 60, 111111, 12, 'spotify:track:BeautifulDay');
 INSERT INTO songs (main_artist_id, node_id) VALUES (4, 13);
 
 -- * Define some edges for testing

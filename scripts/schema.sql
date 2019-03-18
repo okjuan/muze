@@ -31,7 +31,8 @@ CREATE TABLE songs(
     main_artist_id  int REFERENCES artists(node_id) NOT NULL,
     popularity      int CHECK ((popularity >= 0 AND popularity <= 100) OR popularity = NULL),
     duration_ms     int,
-    node_id         int REFERENCES nodes(id) NOT NULL
+    node_id         int REFERENCES nodes(id) NOT NULL,
+    spotify_uri     varchar(100)
 );
 
 CREATE TABLE genres(
