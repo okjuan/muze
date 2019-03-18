@@ -4,6 +4,11 @@
   Original Tutorial: https://www.sitepoint.com/how-to-build-your-own-ai-assistant-using-api-ai/
 
   Edited by Juan Carlos Gallegos to use with Dialogflow's V2 API.
+
+  * It accepts user input
+  * Sends a corresponding AJAX request to Dialogflow's REST API
+  * Presents/speaks Dialogflow's response to user query
+  * Plays Spotify song if included in Dialogflow's response to the user query
 */
 
 // Generated with: $ gcloud auth application-default print-access-token
@@ -23,42 +28,42 @@ $(document).ready(function() {
   $recBtn = $("#rec");
 
   $speechInput.keypress(function(event) {
-	if (event.which == 13) {
-	  event.preventDefault();
-	  send();
-	}
+    if (event.which == 13) {
+      event.preventDefault();
+      send();
+    }
   });
   $recBtn.on("click", function(event) {
-	switchRecognition();
+    switchRecognition();
   });
   $(".debug__btn").on("click", function() {
-	$(this).next().toggleClass("is-active");
-	return false;
+    $(this).next().toggleClass("is-active");
+    return false;
   });
 });
 
 function startRecognition() {
   recognition = new webkitSpeechRecognition();
   recognition.continuous = false;
-	  recognition.interimResults = false;
+  recognition.interimResults = false;
 
   recognition.onstart = function(event) {
-	respond(messageRecording);
-	updateRec();
+    respond(messageRecording);
+    updateRec();
   };
   recognition.onresult = function(event) {
-	recognition.onend = null;
+    recognition.onend = null;
 
-	var text = "";
-	  for (var i = event.resultIndex; i < event.results.length; ++i) {
-		text += event.results[i][0].transcript;
-	  }
-	  setInput(text);
-	stopRecognition();
+    var text = "";
+    for (var i = event.resultIndex; i < event.results.length; ++i) {
+      text += event.results[i][0].transcript;
+    }
+    setInput(text);
+    stopRecognition();
   };
   recognition.onend = function() {
-	respond(messageCouldntHear);
-	stopRecognition();
+    respond(messageCouldntHear);
+    stopRecognition();
   };
   recognition.lang = "en-US";
   recognition.start();
@@ -66,17 +71,17 @@ function startRecognition() {
 
 function stopRecognition() {
   if (recognition) {
-	recognition.stop();
-	recognition = null;
+    recognition.stop();
+    recognition = null;
   }
   updateRec();
 }
 
 function switchRecognition() {
   if (recognition) {
-	stopRecognition();
+    stopRecognition();
   } else {
-	startRecognition();
+    startRecognition();
   }
 }
 
@@ -141,15 +146,15 @@ function debugRespond(val) {
 
 function respond(val) {
   if (val == "") {
-	val = messageSorry;
+    val = messageSorry;
   }
 
   if (val !== messageRecording) {
-	var msg = new SpeechSynthesisUtterance();
-	msg.voiceURI = "native";
-	msg.text = val;
-	msg.lang = "en-US";
-	window.speechSynthesis.speak(msg);
+    var msg = new SpeechSynthesisUtterance();
+    msg.voiceURI = "native";
+    msg.text = val;
+    msg.lang = "en-US";
+    window.speechSynthesis.speak(msg);
   }
 
   $("#spokenResponse").addClass("is-active").find(".spoken-response__text").html(val);

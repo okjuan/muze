@@ -2,6 +2,8 @@
     This script is based on Spotify developers tutorials:
     - https://developer.spotify.com/documentation/web-playback-sdk/quick-start/#
     - https://developer.spotify.com/documentation/web-playback-sdk/reference/#playing-a-spotify-uri
+
+    Sets up Spotify web player and exposes play method to use the player.
 */
 
 var player = undefined;
