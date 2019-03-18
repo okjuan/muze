@@ -45,16 +45,15 @@ Various functions allow *retrieval* of information to the database; some of them
 * `kr_api.get_less_popular_songs(song_name)`: Finds all songs with lower Spotify popularity score
 
 ## Testing
-### Integration Tests
+### Demoing the Application
 This section contains instructions for testing this serverside app in connection with its corresponding Dialogflow agent. Installing [ngrok](https://ngrok.com/) is an easy way to run the service the locally and make it publicly available so that it can communicate with the Dialogflow agent.
 
 * Run the serverside app: `python server/webhook.py`
 * Run `./ngrok http 5000` to connect local server to relay server, making it publicly available
 * Copy HTTPS URL on the screen (e.g. `https://f313aea9.ngrok.io`)
 * In Dialogflow console, in Fulfillment tab, enable the Webhook option and paste the ngrok HTTPS url with `/webhook` appended to it (e.g. `https://f313aea9.ngrok.io/webhook`)
-* In Dialogflow console, enter a prompt into the test agent:
-    * Q: "Who is thank u, next by?" A: "Do you mean the song thank u, next by Ariana Grande?"
-    * Q: "Find a song like thank u, next but more obscure" A: "'How Far I'll Go - Alessia Cara Version' by Alessia Cara is similar but more obscure!"
+* Open `player.html` and enter "Who is the song If Only by?", the UI should play the song _If Only_ by Raveena.
+  * Make sure to get fresh access tokens for both [Spotify](https://developer.spotify.com/documentation/web-playback-sdk/quick-start/#authenticating-with-spotify) and Dialogflow (with gcloud CLI, as described [here](https://dialogflow.com/docs/reference/v2-auth-setup)), and paste them in `client/player.js` and `client/script.js` respectively
 
 ### Unit Tests
 Run the tests from the project's root folder:
