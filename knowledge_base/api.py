@@ -26,44 +26,6 @@ class KnowledgeBaseAPI:
         conn.execute("PRAGMA foreign_keys = 1")
         return conn
 
-    def _get_popularity(self, song_name):
-        """Retrieves Spotify popularity of a song.
-
-        Note: if given song corresponds to multiple entries in DB,
-            then one is chosen arbitarily.
-
-        Params:
-            song_name (str): e.g. "thank u, next"
-
-        Returns:
-            (int): Spotify popularity score (in [0,100]) of song matching given name,
-                None if not found.
-        """
-        try:
-            with closing(self.connection) as con:
-                # Auto-commit
-                with con:
-                    with closing(con.cursor()) as cursor:
-                        cursor.execute("""
-                            SELECT popularity
-                            FROM nodes JOIN songs ON id == node_id
-                            WHERE name = ?;
-                        """, (song_name,))
-                        # [(23,), (454,)] => [23, 454]
-                        res = [x[0] for x in cursor.fetchall()]
-
-        except sqlite3.OperationalError as e:
-            print("ERROR: Could not find popularity of song '{}': {}".format(song_name, str(e)))
-            return None
-
-        num_hits = len(res)
-        if num_hits < 1:
-            print(f"WARN: Could not find popularity of song '{song_name}'")
-            return None
-        elif num_hits > 1:
-            print(f"WARN: Found {num_hits} results when fetching popularity of song '{song_name}'.")
-        return res[0]
-
     def get_less_popular_songs(self, song_name):
         """Returns all songs with lower Spotify popularity score than given song.
 
@@ -83,10 +45,13 @@ class KnowledgeBaseAPI:
                     ...
                 ]
         """
-        cur_popularity = self._get_popularity(song_name)
-        if cur_popularity is None:
-            print(f"ERROR: Could not get popularity of '{song_name}' to fetch less popular songs.")
+        song_data = self.get_song_data(song_name)
+        if song_data == []:
+            print(f"ERROR: Could not get popularity of song '{song_name}': not in database.")
             return []
+        else:
+            print(f"WARN: Found multiple songs matching name '{song_name}', using first result: {song_data[0]}.")
+            popularity = song_data[0]['popularity']
 
         try:
             with closing(self.connection) as con:
@@ -101,7 +66,7 @@ class KnowledgeBaseAPI:
                                 FROM nodes JOIN songs on id == node_id
                                 WHERE popularity < ?
                             ) as x JOIN nodes ON x.main_artist_id == nodes.id;
-                        """, (cur_popularity,))
+                        """, (popularity,))
                         return [
                             dict(
                                 id=x[0],
@@ -147,7 +112,7 @@ class KnowledgeBaseAPI:
                             WHERE id IN (
                                 SELECT dest
                                 FROM edges JOIN nodes ON source == id
-                                WHERE name = (?) AND rel == (?)
+                                WHERE name LIKE (?) AND rel == (?)
                             );
                         """, (entity_name, rel_str))
                         # [("Justin Timberlake",), ("Shawn Mendes",)] => ["Justin Timberlake", "Shawn Mendes"]
@@ -180,7 +145,6 @@ class KnowledgeBaseAPI:
             print("ERROR: Could not retrieve songs: {}".format(str(e)))
         return []
 
-
     def get_song_data(self, song_name):
         """Gets all songs that match given name, along with their artists.
 
@@ -210,7 +174,7 @@ class KnowledgeBaseAPI:
                             FROM (
                                 SELECT name, main_artist_id, duration_ms, popularity, id as song_id, spotify_uri
                                 FROM songs JOIN nodes ON node_id == id
-                                WHERE name == (?)
+                                WHERE name LIKE (?)
                             ) AS song JOIN nodes AS artist ON main_artist_id == id;
                         """, (song_name,))
                         return [
@@ -253,7 +217,7 @@ class KnowledgeBaseAPI:
                         cursor.execute("""
                             SELECT id, name, num_spotify_followers
                             FROM artists JOIN nodes ON node_id == id
-                            WHERE name == (?);
+                            WHERE name LIKE (?);
                         """, (artist_name,))
                         res_tuples = cursor.fetchall()
 
@@ -379,7 +343,7 @@ class KnowledgeBaseAPI:
                         cursor.execute("""
                             SELECT id
                             FROM nodes
-                            WHERE name == (?)
+                            WHERE name LIKE (?)
                         """, (node_name,))
                         res = cursor.fetchall()
 

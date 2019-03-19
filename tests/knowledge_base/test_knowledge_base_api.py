@@ -31,6 +31,37 @@ class TestMusicKnowledgeBaseAPI(unittest.TestCase):
             "Found expected values for song data for 'Despacito'."
         )
 
+    def test_get_song_data_case_insensitive(self):
+        song_data = self.kb_api.get_song_data("dESpAcItO")
+        self.assertEqual(1, len(song_data), "Expected exactly one result from query for song 'dESpAcItO'.")
+        self.assertEqual(
+            song_data[0],
+            dict(
+                id=10,
+                song_name="Despacito",
+                artist_name="Justin Bieber",
+                duration_ms=222222,
+                popularity=10,
+                spotify_uri='spotify:track:Despacito',
+            ),
+            "Found expected values for song data for 'Despacito'."
+        )
+
+        song_data = self.kb_api.get_song_data("bEaUTIful DAY")
+        self.assertEqual(1, len(song_data), "Expected exactly one result from query for song 'bEaUTIful DAY'.")
+        self.assertEqual(
+            song_data[0],
+            dict(
+                id=12,
+                song_name="Beautiful Day",
+                artist_name="U2",
+                duration_ms=111111,
+                popularity=60,
+                spotify_uri='spotify:track:BeautifulDay',
+            ),
+            "Found expected values for song data for 'Beautiful Day'."
+        )
+
     def test_get_song_data_dne(self):
         res = self.kb_api.get_song_data("Not In Database")
         self.assertEqual(res, [], "Expected empty list of results for queried song not in DB.")
@@ -102,16 +133,6 @@ class TestMusicKnowledgeBaseAPI(unittest.TestCase):
     def test_get_less_popular_songs_unknown_song(self):
         res = self.kb_api.get_less_popular_songs("Unknown song")
         self.assertEqual(res, [], "Woops!")
-
-    def test_get_popularity(self):
-        res = self.kb_api._get_popularity('Beautiful Day')
-        self.assertEqual(res, 60, "Unexpected popularity for song 'Beautiful Day'")
-
-        res = self.kb_api._get_popularity('Rock Your Body')
-        self.assertEqual(res, 30, "Unexpected popularity for song 'Rock Your Body'")
-
-        res = self.kb_api._get_popularity('Unknown Song')
-        self.assertEqual(res, None, "Unexpected popularity of unknown song")
 
     def test_find_similar_song(self):
         res = self.kb_api.get_related_entities("Despacito")
