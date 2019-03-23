@@ -15,6 +15,12 @@ class KnowledgeBaseAPI:
             similarity="similar to",
             genre="of genre",
         )
+        # based on Spotify's audio features object
+        self.song_audio_features = set([
+            "acousticness", "danceability", "energy", "tempo",
+            "instrumentalness", "liveness", "loudness", "mode",
+            "speechiness", "valence", "musical_key", "time_signature",
+        ])
 
     def __str__(self):
         return "Knowledge Representation API object for {} DB.".format(self.dbName)
@@ -60,7 +66,7 @@ class KnowledgeBaseAPI:
                     with closing(con.cursor()) as cursor:
                         # Inner query retrieves info about songs that are less popular
                         cursor.execute("""
-                            SELECT x.id, x.name, x.popularity, x.duration_ms, nodes.name
+                            SELECT x.id, x.name, x.popularity, x.duration_ms, nodes.name, x.spotify_uri
                             FROM (
                                 SELECT *
                                 FROM nodes JOIN songs on id == node_id
@@ -74,6 +80,7 @@ class KnowledgeBaseAPI:
                                 popularity=x[2],
                                 duration_ms=x[3],
                                 artist_name=x[4],
+                                spotify_uri=x[5],
                             ) for x in cursor.fetchall()
                         ]
 
@@ -157,7 +164,21 @@ class KnowledgeBaseAPI:
                         artist_name: "Justin Bieber",
                         duration_ms: 11111,
                         popularity: 100,
-                        spotify_uri: 'spotify:track:6ohzjop0VYBRZ12ichlwg5'
+                        spotify_uri: 'spotify:track:6ohzjop0VYBRZ12ichlwg5',
+
+                        acousticness:   0.1,
+                        danceability:   0.2,
+                        energy:         0.3,
+                        instrumentalness:   0.4,
+                        liveness:       0.1,
+                        loudness:       0.2,
+                        speechiness:    0.3,
+                        valence:        0.4,
+
+                        tempo:          90,
+                        mode:           'major',
+                        musical_key:    3,
+                        time_signature: 4,
                     },
                     ...
                 ]
@@ -170,21 +191,26 @@ class KnowledgeBaseAPI:
                     # Auto-close.
                     with closing(con.cursor()) as cursor:
                         cursor.execute("""
-                            SELECT song.name, artist.name, song.duration_ms, song.popularity, song_id, spotify_uri
+                            SELECT
+                                song.name, artist.name, song.duration_ms, song.popularity,
+                                song.id, song.spotify_uri, song.acousticness, song.danceability,
+                                song.energy, song.instrumentalness, song.liveness, song.loudness,
+                                song.speechiness, song.valence, song.tempo, song.mode,
+                                song.musical_key, song.time_signature
+
                             FROM (
-                                SELECT name, main_artist_id, duration_ms, popularity, id as song_id, spotify_uri
+                                SELECT *
                                 FROM songs JOIN nodes ON node_id == id
                                 WHERE name LIKE (?)
-                            ) AS song JOIN nodes AS artist ON main_artist_id == id;
+                            ) AS song JOIN nodes AS artist ON main_artist_id == artist.id;
                         """, (song_name,))
                         return [
                             dict(
-                                song_name=x[0],
-                                artist_name=x[1],
-                                duration_ms=x[2],
-                                popularity=x[3],
-                                id=x[4],
-                                spotify_uri=x[5],
+                                song_name=x[0], artist_name=x[1], duration_ms=x[2], popularity=x[3],
+                                id=x[4], spotify_uri=x[5], acousticness=x[6], danceability=x[7],
+                                energy=x[8], instrumentalness=x[9], liveness=x[10], loudness=x[11],
+                                speechiness=x[12], valence=x[13], tempo=x[14], mode=x[15],
+                                musical_key=x[16], time_signature=x[17],
                             ) for x in cursor.fetchall()
                         ]
 
@@ -460,12 +486,12 @@ class KnowledgeBaseAPI:
         except sqlite3.OperationalError as e:
             print("ERROR: Could not add artist '{0}'".format(
                 name))
-            return node_id
+            return None
 
         except sqlite3.IntegrityError as e:
             print("ERROR: Could not add artist '{}' due to schema constraints: {}"
                 .format(name, str(e)))
-            return node_id
+            return None
 
         for genre in genres:
             if self.add_genre(genre) is not None:
@@ -478,7 +504,7 @@ class KnowledgeBaseAPI:
 
         return node_id
 
-    def add_song(self, name, artist, duration_ms=None, popularity=None, spotify_uri=None):
+    def add_song(self, name, artist, duration_ms=None, popularity=None, spotify_uri=None, audio_features=dict()):
         """Inserts given values into two tables: songs and nodes.
 
         Ensures that:
@@ -492,6 +518,13 @@ class KnowledgeBaseAPI:
             duration_ms (int): length of song e.g. 22222.
             popularity (int): in [0,100] range.
             spotify_uri (str): used for streaming e.g. 'spotify:track:6ohzjop0VYBRZ12ichlwg5'
+            audio_features (dict): keys should be present in self.song_audio_features; otherwise,
+                they are ignored e.g. {
+                    'acousticness': 0.78,
+                    'danceability': 0.647,
+                    'energy': 0.309,
+                    ...
+                }
 
         Returns:
             (int): node_id corresponding to song if added or already existed; None otherwise.
@@ -514,23 +547,50 @@ class KnowledgeBaseAPI:
             print("ERROR: Failed to add song '{}' due to an error.".format(name))
             return None
 
+        # Set ommitted audio features to None
+        for audio_feature in self.song_audio_features:
+            if audio_feature not in audio_features:
+                audio_features[audio_feature] = None
+
+        # Check for unknown audio features
+        for audio_feature in audio_features:
+            if audio_feature not in self.song_audio_features:
+                print(f"WARN: audio feature '{audio_feature}' (given for song '{name}')\
+                    is not recognized.")
+
         try:
             with closing(self.connection) as con:
                 with con:
                     with closing(con.cursor()) as cursor:
+                        x = audio_features
+                        vals = (
+                            artist_node_id, node_id, duration_ms, popularity, spotify_uri,
+                            x['acousticness'], x['danceability'], x['energy'],
+                            x['instrumentalness'], x['liveness'], x['mode'], x['loudness'],
+                            x['speechiness'], x['valence'], x['tempo'], x['musical_key'],
+                            x['time_signature'],
+                        )
                         cursor.execute("""
-                            INSERT INTO songs (main_artist_id, node_id, duration_ms, popularity, spotify_uri)
-                            VALUES (?, ?, ?, ?, ?);
-                        """, (artist_node_id, node_id, duration_ms, popularity, spotify_uri))
+                            INSERT INTO songs (
+                                main_artist_id, node_id, duration_ms, popularity, spotify_uri,
+                                acousticness, danceability, energy, instrumentalness, liveness, mode,
+                                loudness, speechiness, valence, tempo, musical_key, time_signature
+                            )
+                            VALUES (
+                                ?, ?, ?, ?, ?,
+                                ?, ?, ?, ?, ?, ?,
+                                ?, ?, ?, ?, ?, ?
+                            );
+                        """, vals)
 
         except sqlite3.OperationalError as e:
             print(f"ERROR: Could not add song '{name}' with artist '{artist}': {e}")
-            return node_id
+            return None
 
         except sqlite3.IntegrityError as e:
             print("ERROR: Could not add song '{}' with artist '{}' due to schema constraints: {}"
                 .format(name, artist, str(e)))
-            return node_id
+            return None
 
         return node_id
 

@@ -56,7 +56,7 @@ class TestDbSchema(unittest.TestCase):
 
         res = self.kb_api.add_song("Song name", None)
         self.assertEqual(res, None,
-            "Expected 'None' value for artist to be rejected.")
+            "Expected 'None' value for song to be rejected.")
 
         res = self.kb_api.add_song(None, "Artist name")
         self.assertEqual(res, None,
@@ -69,6 +69,44 @@ class TestDbSchema(unittest.TestCase):
         node_id = self.kb_api._add_node("Some entity", None)
         self.assertEqual(node_id, None,
             "Expected 'None' value for entity type to be rejected.")
+
+    def test_song_audio_features_range_constraints(self):
+        # NOTE: all values are at their upper limit so that we can just add 1
+        #   to them and test that the schema constraints reject their addition
+        #   (mode is left out because it is not numerical)
+        audio_features = dict(
+            acousticness=1, danceability=1, energy=1, instrumentalness=1, liveness=1,
+            loudness=1, speechiness=1, valence=1, tempo=999, musical_key=11, time_signature=7,
+        )
+
+        for feature_name in self.kb_api.song_audio_features:
+            if feature_name == 'mode':
+                continue
+
+            # push value out of valid range
+            audio_features[feature_name] += 1
+            new_song_id = self.kb_api.add_song(
+                "Song by Justin Bieber",
+                "Justin Bieber",
+                audio_features=audio_features,
+            )
+            self.assertEqual(
+                new_song_id,
+                None,
+                f"Expected song with {feature_name} out of range to be rejected.",
+            )
+            # reset value back into valid range
+            audio_features[feature_name] -= 1
+
+    def test_song_mode_constraint(self):
+        new_song_id = self.kb_api.add_song(
+            "Song by Justin Bieber",
+            "Justin Bieber",
+            audio_features=dict(mode='not major or minor'),
+        )
+        self.assertEqual(new_song_id, None, "Expected song with invalid mode to be rejected.")
+
+
 
 if __name__ == '__main__':
     unittest.main()

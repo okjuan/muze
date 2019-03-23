@@ -29,6 +29,24 @@ CREATE TABLE artists(
 
 CREATE TABLE songs(
     main_artist_id  int REFERENCES artists(node_id) NOT NULL,
+
+    -- see Spotify's audio features object:
+    -- - https://developer.spotify.com/documentation/web-api/reference/object-model/#audio-features-object
+    acousticness        real CHECK(acousticness >= 0 AND acousticness <= 1),
+    danceability        real CHECK(danceability >= 0 AND danceability <= 1),
+    energy              real CHECK(energy >= 0 AND energy <= 1),
+    instrumentalness    real CHECK(instrumentalness >= 0 AND instrumentalness <= 1),
+    liveness            real CHECK(liveness >= 0 AND liveness <= 1),
+    loudness            real CHECK(loudness >= -60 AND loudness <= 0), -- in dB
+    speechiness         real CHECK(speechiness >= 0 AND speechiness <= 1),
+    valence             real CHECK(valence >= 0 AND valence <= 1),
+
+    tempo               real CHECK(tempo > 0 AND tempo < 1000),
+    mode                varchar(6) CHECK(mode == 'major' OR mode == 'minor'),
+    musical_key         int CHECK(musical_key >= 0 AND musical_key < 12),
+    -- see: https://developer.spotify.com/documentation/web-api/reference/tracks/get-audio-analysis/
+    time_signature      int CHECK(time_signature >= 3 AND time_signature <= 7),
+
     popularity      int CHECK ((popularity >= 0 AND popularity <= 100) OR popularity = NULL),
     duration_ms     int,
     node_id         int REFERENCES nodes(id) NOT NULL,
