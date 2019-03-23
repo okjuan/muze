@@ -36,6 +36,14 @@ class TestDbSchema(unittest.TestCase):
         self.assertEqual(res, False,
             "Expected attempt to add a duplicate edge to fail.")
 
+    def test_rejects_song_with_duplicate_id(self):
+        new_song_id = self.kb_api.add_song(
+            "some song",
+            "Justin Bieber",
+            spotify_uri="spotify:track:Despacito", # already in DB
+        )
+        self.assertEqual(new_song_id, None, "Expected song addition to fail.")
+
     def test_edges_not_null_constraints(self):
         res = self.kb_api.connect_entities(None, "Justin Timberlake", "similar to", 1)
         self.assertEqual(res, False,

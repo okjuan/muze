@@ -50,7 +50,7 @@ CREATE TABLE songs(
     popularity      int CHECK ((popularity >= 0 AND popularity <= 100) OR popularity = NULL),
     duration_ms     int,
     node_id         int REFERENCES nodes(id) NOT NULL,
-    spotify_uri     varchar(100)
+    spotify_uri     varchar(100) UNIQUE
 );
 
 CREATE TABLE genres(
