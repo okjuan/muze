@@ -58,7 +58,7 @@ def main():
                         help=" Pulls data from Spotify, requires Spotify_client_id and"
                              " spotify_secret_key  "
                              "Ex: -s 12345 12345")
-    parser.add_argument("-f", type=str, nargs='*', dest="infile",
+    parser.add_argument("-f", type=str, dest="infile",
                         help="Name of file containing artist names separated by newlines")
     args = parser.parse_args()
 
