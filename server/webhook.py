@@ -76,6 +76,38 @@ def get_more_obscure_song(song_name):
         spotify_uri = results[0]['spotify_uri']
         return tell(f"Found {res_song_name} by {res_artist_name}").link_out("Spotify", spotify_uri)
 
+@assist.action('Find Slightly Different Song')
+def get_finegrained_recommendation(song, audio_feature_adjective):
+    res = music_api.get_song_data(song)
+    if len(res) == 0:
+        return tell(f"Unfortunately, I could not find song '{song}'.")
+    else:
+        print(f"WARN: Found {len(res)} hits for song '{song}'. Choosing one arbitrarily.")
+        cur_song_data = res[0]
+        cur_acousticness = res[0]['acousticness']
+
+    if cur_acousticness is None:
+        return tell(f"Unfortunately, I have no data regarding '{audio_feature_adjective}' of song '{song}'.")
+
+    # TODO: get similar songs instead of song by same artist
+    # similar_songs = music_api.get_related_entities(song)
+    songs_by_same_artist = music_api.get_songs_by_artist(cur_song_data['artist_name'])
+
+    if audio_feature_adjective == "more acoustic":
+        compare = lambda x: x > cur_acousticness
+    elif audio_feature_adjective == "less acoustic":
+        compare = lambda x: x < cur_acousticness
+    else:
+        return tell(f"Unfortunately, I could not recognize '{audio_feature_adjective}' as an adjective.")
+
+    for s in songs_by_same_artist:
+        tmp_song_data = music_api.get_song_data(s)[0]
+        tmp_acousticness = tmp_song_data['acousticness']
+        if tmp_acousticness is not None and compare(tmp_acousticness):
+            return tell(f"Found '{s}' by {tmp_song_data['artist_name']}")\
+                .link_out("Spotify", tmp_song_data['spotify_uri'])
+    return tell(f"Unfortunately, I could not find a song '{audio_feature_adjective}' than '{song}'.")
+
 
 if __name__ == '__main__':
     app.run(debug=True)
