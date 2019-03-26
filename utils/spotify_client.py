@@ -3,6 +3,10 @@ from base64 import b64encode
 import pprint
 import sys
 
+
+pp = pprint.PrettyPrinter(indent=2)
+URL_ENCODED_COMMA = "%2C"
+
 class SpotifyClient():
     """A simple object for interacting with Spotify's public web API.
 
@@ -117,12 +121,8 @@ class SpotifyClient():
             artist (string): e.g. "Justin Bieber"
 
         Returns:
-            (dict): keys: id, num_followers, genres. None if search failed or rendered no results.
-                e.g. {
-                    id=1uNFoZAHBGtllmzznpCI3s,
-                    num_followers=25683438,
-                    genres=["canadian pop", "dance pop", "pop", "post-teen pop"]
-                }
+            (dict): body of Spotify API's response, containing info about matching artists,
+                songs, and albums.
         """
         params = dict(q=artist, type="artist")
         headers = self.set_token_in_auth_header(dict())
@@ -161,7 +161,16 @@ class SpotifyClient():
             artist_ID (string):
 
         Returns:
-            top_songs (dict): key is song name, val is its metadata packaged in a dict. None if an error occurs.
+            top_songs (dict): keys are the song names, val is a dict with various fields. Empty if an error occurs.
+                e.g. {
+                    "thank u, next": {
+                        duration_ms: 207320,
+                        id: "3e9HZxeyfWwjeyPAMmWSSQ",
+                        popularity: 92,
+                        uri: "spotify:track:3e9HZxeyfWwjeyPAMmWSSQ"
+                    },
+                    ...
+                }
         """
         headers = self.set_token_in_auth_header(dict())
         params = dict(country=country_iso_code)
@@ -170,24 +179,19 @@ class SpotifyClient():
             headers=headers,
             params=params,
         )
-
         try:
             body = resp.json()
         except Exception as e:
             print("ERROR: Could not parse response body of top songs request for artist with ID: ", artist_ID)
-            return None
+            return dict()
 
         if resp.status_code != 200:
             print("ERROR: Request for finding top songs of '{}' failed. Received HTTP code:{}".format(artist_ID, resp.status_code))
             print(body)
-            return None
+            return dict()
 
         top_songs = dict()
         for track in body["tracks"]:
-            # ignore entire albums for now
-            if track["album"]["album_type"] == "album":
-                continue
-
             top_songs[track["name"]] = dict(
                 duration_ms=int(track["duration_ms"]),
                 id=track["id"],
@@ -196,3 +200,98 @@ class SpotifyClient():
             )
         return top_songs
 
+    def get_audio_features(self, track_ids):
+        """Fetches audio features for each given track as computed by Spotify.
+
+        Examples of audio features:
+        - danceability
+        - energy
+        - instrumentalness
+        - bounciness
+
+        Returns:
+            all_audio_features (dict): elems are dicts with track ID as key and value is a dict
+                containing each audio feature; None if request fails.
+                e.g. {
+                    '1TEL6MlSSVLSdhOSddidlJ': {
+                        'acousticness': 0.78,
+                        'analysis_url': 'https://api.spotify.com/v1/audio-analysis/1TEL6MlSSVLSdhOSddidlJ',
+                        'danceability': 0.647,
+                        'duration_ms': 171573,
+                        'energy': 0.309,
+                        'id': '1TEL6MlSSVLSdhOSddidlJ',
+                        'instrumentalness': 7.41e-06,
+                        'key': 7,
+                        'liveness': 0.202,
+                        'loudness': -7.948,
+                        'mode': 0,
+                        'speechiness': 0.0366,
+                        'tempo': 87.045,
+                        'time_signature': 4,
+                        'track_href': 'https://api.spotify.com/v1/tracks/1TEL6MlSSVLSdhOSddidlJ',
+                        'type': 'audio_features',
+                        'uri': 'spotify:track:1TEL6MlSSVLSdhOSddidlJ',
+                        'valence': 0.195,
+                    },
+                    ...
+                }
+        """
+        comma_sep_ids = URL_ENCODED_COMMA.join([x for x in track_ids])
+        headers = self.set_token_in_auth_header(dict())
+        resp = requests.get(
+            self.api_base + f"/v1/audio-features?ids={comma_sep_ids}",
+            headers=headers,
+        )
+        try:
+            body = resp.json()
+        except Exception as e:
+            print("ERROR: Could not parse response body of audio features request for track IDs: ", track_ids)
+            return None
+
+        if resp.status_code != 200:
+            print(f"ERROR: Request for audio features of songs with IDs '{track_ids}' failed with HTTP code:{resp.status_code}")
+            print(body)
+            return None
+
+        all_audio_features = dict()
+        for features in body['audio_features']:
+            all_audio_features[features['id']] = features
+        return all_audio_features
+
+def test_client(file):
+    """Finds metadata and top songs on Spotify for given artists.
+
+    Input format:
+    - 1st line should be the Spotify client ID
+    - 2nd line should be the Spotify secret key
+    - Every subsequent line of input should be an artist name
+    """
+    print("Enter Spotify client ID and then client secret:")
+    client_id, client_secret = file.readline().strip(), file.readline().strip()
+    print(f"Read client ID '{client_id}' and secret '{client_secret}'")
+    spotify = SpotifyClient(client_id, client_secret)
+
+    for line in file:
+
+        artist = line.strip()
+        artist_data = spotify.get_artist_data(artist)
+
+        songs = spotify.get_top_songs(artist_data['id'], 'CA')
+        print(f"Songs by {artist}: {', '.join([song for song in songs.keys()])}")
+        pp.pprint(
+            spotify.get_audio_features(
+                [song_info['id'] for _, song_info in songs.items()]
+            )
+        )
+
+
+if __name__ == "__main__":
+    if len(sys.argv) <= 1:
+        file = sys.stdin
+    else:
+        try:
+            file = open(sys.argv[1], "r")
+        except FileNotFoundError as e:
+            print("Could not open file", sys.argv[1])
+            print("Usage: $ python utils/spotify_client.py [input_file_name]")
+    test_client(file)

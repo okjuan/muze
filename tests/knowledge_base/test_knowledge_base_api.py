@@ -27,8 +27,51 @@ class TestMusicKnowledgeBaseAPI(unittest.TestCase):
                 duration_ms=222222,
                 popularity=10,
                 spotify_uri='spotify:track:Despacito',
+                acousticness=None, danceability=None, energy=None,
+                instrumentalness=None, liveness=None, loudness=None,
+                speechiness=None, valence=None, tempo=None, mode=None,
+                musical_key=None, time_signature=None,
             ),
             "Found expected values for song data for 'Despacito'."
+        )
+
+    def test_get_song_data_case_insensitive(self):
+        song_data = self.kb_api.get_song_data("dESpAcItO")
+        self.assertEqual(1, len(song_data), "Expected exactly one result from query for song 'dESpAcItO'.")
+        self.assertEqual(
+            song_data[0],
+            dict(
+                id=10,
+                song_name="Despacito",
+                artist_name="Justin Bieber",
+                duration_ms=222222,
+                popularity=10,
+                spotify_uri='spotify:track:Despacito',
+                acousticness=None, danceability=None, energy=None,
+                instrumentalness=None, liveness=None, loudness=None,
+                speechiness=None, valence=None, tempo=None, mode=None,
+                musical_key=None, time_signature=None,
+            ),
+            "Found expected values for song data for 'Despacito'."
+        )
+
+        song_data = self.kb_api.get_song_data("bEaUTIful DAY")
+        self.assertEqual(1, len(song_data), "Expected exactly one result from query for song 'bEaUTIful DAY'.")
+        self.assertEqual(
+            song_data[0],
+            dict(
+                id=12,
+                song_name="Beautiful Day",
+                artist_name="U2",
+                duration_ms=111111,
+                popularity=60,
+                spotify_uri='spotify:track:BeautifulDay',
+                acousticness=None, danceability=None, energy=None,
+                instrumentalness=None, liveness=None, loudness=None,
+                speechiness=None, valence=None, tempo=None, mode=None,
+                musical_key=None, time_signature=None,
+            ),
+            "Found expected values for song data for 'Beautiful Day'."
         )
 
     def test_get_song_data_dne(self):
@@ -76,19 +119,22 @@ class TestMusicKnowledgeBaseAPI(unittest.TestCase):
             'duration_ms': 222222,
             'id': 10,
             'popularity': 10,
-            'song_name': 'Despacito'
+            'song_name': 'Despacito',
+            'spotify_uri': 'spotify:track:Despacito',
         }, {
             'artist_name': 'Justin Bieber',
             'duration_ms': 333333,
             'id': 14,
             'popularity': 20,
-            'song_name': 'Sorry'
+            'song_name': 'Sorry',
+            'spotify_uri': 'spotify:track:Sorry',
         }, {
             'artist_name': 'Justin Timberlake',
             'duration_ms': 444444,
             'id': 11,
             'popularity': 30,
-            'song_name': 'Rock Your Body'
+            'song_name': 'Rock Your Body',
+            'spotify_uri': 'spotify:track:RockYourBody',
         }]
         res = self.kb_api.get_less_popular_songs("Beautiful Day")
 
@@ -96,22 +142,14 @@ class TestMusicKnowledgeBaseAPI(unittest.TestCase):
             "Unexpected result of retrieving songs less popular than 'Beautiful Day'")
 
         res = self.kb_api.get_less_popular_songs("Rock Your Body")
+
+        # 'Despacito' and 'Sorry' are less popular songs than 'Rock Your Body'
         self.assertEqual(res, expected_res[:2],
             "Unexpected result of retrieving songs less popular than 'Rock Your Body'")
 
     def test_get_less_popular_songs_unknown_song(self):
         res = self.kb_api.get_less_popular_songs("Unknown song")
-        self.assertEqual(res, [], "Woops!")
-
-    def test_get_popularity(self):
-        res = self.kb_api._get_popularity('Beautiful Day')
-        self.assertEqual(res, 60, "Unexpected popularity for song 'Beautiful Day'")
-
-        res = self.kb_api._get_popularity('Rock Your Body')
-        self.assertEqual(res, 30, "Unexpected popularity for song 'Rock Your Body'")
-
-        res = self.kb_api._get_popularity('Unknown Song')
-        self.assertEqual(res, None, "Unexpected popularity of unknown song")
+        self.assertEqual(res, [], "Expected no results for unknown song.")
 
     def test_find_similar_song(self):
         res = self.kb_api.get_related_entities("Despacito")
@@ -269,6 +307,7 @@ class TestMusicKnowledgeBaseAPI(unittest.TestCase):
             duration_ms=11111,
             popularity=100,
             spotify_uri="spotify:track:Heart",
+            audio_features=dict(energy=0.5),
         )
         self.assertNotEqual(new_song_node_id, None, "Failed to add song 'Heart' by artist 'Justin Bieber' to knowledge base.")
 
@@ -285,6 +324,11 @@ class TestMusicKnowledgeBaseAPI(unittest.TestCase):
                 duration_ms=11111,
                 popularity=100,
                 spotify_uri="spotify:track:Heart",
+                energy=0.5,
+                acousticness=None, danceability=None,
+                instrumentalness=None, liveness=None, loudness=None,
+                speechiness=None, valence=None, tempo=None, mode=None,
+                musical_key=None, time_signature=None,
             ),
             "Received unexpected song data",
         )
@@ -303,11 +347,40 @@ class TestMusicKnowledgeBaseAPI(unittest.TestCase):
                 id=new_song_node_id,
                 song_name="What do you mean?",
                 artist_name="Justin Bieber",
-                duration_ms=None,
-                popularity=None,
-                spotify_uri=None,
+                duration_ms=None, popularity=None, spotify_uri=None,
+                acousticness=None, danceability=None, energy=None,
+                instrumentalness=None, liveness=None, loudness=None,
+                speechiness=None, valence=None, tempo=None, mode=None,
+                musical_key=None, time_signature=None,
             ),
             "Received unexpected song data"
+        )
+
+    def test_add_song_with_all_audio_features(self):
+        valid_audio_features = dict(
+            acousticness=1, danceability=1, energy=1, instrumentalness=1,
+            liveness=1, loudness=0, speechiness=1, valence=1, tempo=1,
+            mode="major", musical_key=1, time_signature=3,
+        )
+        new_song_id = self.kb_api.add_song(
+            "Song with all audio features",
+            "Justin Bieber",
+            audio_features=valid_audio_features,
+        )
+
+        song_data = self.kb_api.get_song_data("Song with all audio features")
+        self.assertEqual(
+            dict(
+                id=new_song_id,
+                song_name="Song with all audio features",
+                artist_name="Justin Bieber",
+                duration_ms=None, popularity=None, spotify_uri=None,
+                acousticness=1.0, danceability=1.0, energy=1.0, instrumentalness=1.0,
+                liveness=1.0, loudness=0.0, speechiness=1.0, valence=1.0, tempo=1.0,
+                mode="major", musical_key=1, time_signature=3,
+            ),
+            song_data[0],
+            "Retrieved song data did not match expected.",
         )
 
     def test_add_duplicate_song_for_different_artist(self):

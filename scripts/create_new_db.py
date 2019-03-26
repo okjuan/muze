@@ -23,14 +23,14 @@ from scripts import test_db_utils
 
 def setup_db_with_spotify_data(spotify_client_id,
                                spotify_secret_key,
-                               artists,
+                               infile,
                                db_path=None,
                                ):
     try:
         db_path = test_db_utils \
             .create_and_populate_db_with_spotify(spotify_client_id,
                                                  spotify_secret_key,
-                                                 artists,
+                                                 infile,
                                                  path=db_path,
                                                  )
     except FileNotFoundError as e:
@@ -58,6 +58,8 @@ def main():
                         help=" Pulls data from Spotify, requires Spotify_client_id and"
                              " spotify_secret_key  "
                              "Ex: -s 12345 12345")
+    parser.add_argument("-f", type=str, dest="infile",
+                        help="Name of file containing artist names separated by newlines")
     args = parser.parse_args()
 
     db_path = args.db_path
@@ -80,14 +82,14 @@ def main():
                   file=sys.stdout)
             sys.exit()
 
-        test_artists = [
-                "Raveena", "Ariana Grande", "Alessia Cara", "U2",
-                "Justin Timberlake", "Justin Bieber",
-                "Shawn Mendes",
-        ]
+        if args.infile is not None:
+            import ipdb; ipdb.set_trace()
+            infile = open(args.infile, "r")
+        else:
+            infile = sys.stdin
         setup_db_with_spotify_data(spotify_client_id,
                                    spotify_secret_key,
-                                   test_artists,
+                                   infile,
                                    db_path=db_path,
                                    )
     else:
