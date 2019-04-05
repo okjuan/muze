@@ -85,6 +85,14 @@ class SpotifyClient():
         Returns:
             related_artists (dict): key is ID of related artists, val is their metadata packaged in a dict.
                 None if an error occurs.
+                e.g. {
+                    'Alextbh': {
+                        'id': '0kXDB5aeESWj5BD9TCLkMu',
+                        'genres': ['indie r&b', 'malaysian indie'],
+                        'num_followers': 19517
+                    },
+                    ...
+                }
         """
         headers = self.set_token_in_auth_header(dict())
         resp = requests.get(
@@ -106,7 +114,7 @@ class SpotifyClient():
         related_artists = dict()
         for hit in body["artists"]:
             related_artists[hit["name"]] = dict(
-                ID=hit["id"],
+                id=hit["id"],
                 genres=hit["genres"],
                 num_followers=int(hit["followers"]["total"]),
             )
@@ -255,6 +263,9 @@ class SpotifyClient():
 
         all_audio_features = dict()
         for features in body['audio_features']:
+            if features is None:
+                print(f"ERROR: did not get audio features in response body: {body}")
+                break
             all_audio_features[features['id']] = features
         return all_audio_features
 

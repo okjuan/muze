@@ -83,7 +83,6 @@ def main():
             sys.exit()
 
         if args.infile is not None:
-            import ipdb; ipdb.set_trace()
             infile = open(args.infile, "r")
         else:
             infile = sys.stdin
