@@ -26,10 +26,11 @@ class TestMusicKnowledgeBaseAPI(unittest.TestCase):
                 artist_name="Justin Bieber",
                 duration_ms=222222,
                 popularity=10,
+                valence=0.1,
                 spotify_uri='spotify:track:Despacito',
                 acousticness=None, danceability=None, energy=None,
                 instrumentalness=None, liveness=None, loudness=None,
-                speechiness=None, valence=None, tempo=None, mode=None,
+                speechiness=None, tempo=None, mode=None,
                 musical_key=None, time_signature=None,
             ),
             "Found expected values for song data for 'Despacito'."
@@ -46,10 +47,11 @@ class TestMusicKnowledgeBaseAPI(unittest.TestCase):
                 artist_name="Justin Bieber",
                 duration_ms=222222,
                 popularity=10,
+                valence=0.1,
                 spotify_uri='spotify:track:Despacito',
                 acousticness=None, danceability=None, energy=None,
                 instrumentalness=None, liveness=None, loudness=None,
-                speechiness=None, valence=None, tempo=None, mode=None,
+                speechiness=None, tempo=None, mode=None,
                 musical_key=None, time_signature=None,
             ),
             "Found expected values for song data for 'Despacito'."
@@ -65,10 +67,11 @@ class TestMusicKnowledgeBaseAPI(unittest.TestCase):
                 artist_name="U2",
                 duration_ms=111111,
                 popularity=60,
+                valence=1.0,
                 spotify_uri='spotify:track:BeautifulDay',
                 acousticness=None, danceability=None, energy=None,
                 instrumentalness=None, liveness=None, loudness=None,
-                speechiness=None, valence=None, tempo=None, mode=None,
+                speechiness=None, tempo=None, mode=None,
                 musical_key=None, time_signature=None,
             ),
             "Found expected values for song data for 'Beautiful Day'."
@@ -150,6 +153,59 @@ class TestMusicKnowledgeBaseAPI(unittest.TestCase):
     def test_get_less_popular_songs_unknown_song(self):
         res = self.kb_api.get_less_popular_songs("Unknown song")
         self.assertEqual(res, [], "Expected no results for unknown song.")
+
+    def test_songs_are_related_popularity(self):
+        self.assertEqual(
+            self.kb_api.songs_are_related('Beautiful Day', 'Despacito', "less popular"),
+            False,
+            "'Beautiful Day' is MORE popular than 'Despacito'",
+        )
+
+        self.assertEqual(
+            self.kb_api.songs_are_related('Beautiful Day', 'Despacito', "more popular"),
+            True,
+            "'Beautiful Day' is MORE popular than 'Despacito'",
+        )
+
+    def test_songs_are_related_valence(self):
+        self.assertEqual(
+            self.kb_api.songs_are_related('Beautiful Day', 'Despacito', "happier"),
+            True,
+            "'Beautiful Day' is MORE happy than 'Despacito'",
+        )
+
+        self.assertEqual(
+            self.kb_api.songs_are_related('Beautiful Day', 'Despacito', "sadder"),
+            False,
+            "'Beautiful Day' is MORE happy than 'Despacito'",
+        )
+
+    def test_songs_are_related_same_song(self):
+        self.assertEqual(
+            self.kb_api.songs_are_related('Beautiful Day', 'Beautiful Day', "more popular"),
+            False,
+            "'Beautiful Day' cannot be more popular than itself.",
+        )
+
+        self.assertEqual(
+            self.kb_api.songs_are_related('Beautiful Day', 'Beautiful Day', "more popular"),
+            False,
+            "'Beautiful Day' cannot be more popular than itself.",
+        )
+
+    def test_songs_are_related_unknown_relationship(self):
+        self.assertEqual(
+            self.kb_api.songs_are_related('Beautiful Day', 'Despacito', 'more something'),
+            False,
+            "Expected return value False when relationship is invalid.",
+        )
+
+    def test_songs_are_related_value_missing(self):
+        self.assertEqual(
+            self.kb_api.songs_are_related('Beautiful Day', 'Despacito', 'dancier'),
+            False,
+            "Expected return value False when DB does not contain value for given (valid) relationship.",
+        )
 
     def test_find_similar_song(self):
         res = self.kb_api.get_related_entities("Despacito")
