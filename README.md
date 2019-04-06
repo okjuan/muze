@@ -42,7 +42,6 @@ Various functions allow *retrieval* of information to the database; some of them
 * `kr_api.get_related_entities(entity_name, rel_str)`: Finds all entities connected to the given entity by an edge with the given label `rel_str`.
   * This implements a key part of our KR system's functionality: **querying the semantic network!**
   * The given entity may be any of song, an artist, etc. The returned entity may or may not be the same type of entity.
-* `kr_api.get_less_popular_songs(song_name)`: Finds all songs with lower Spotify popularity score
 
 ## Testing
 ### Demoing the Application

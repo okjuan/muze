@@ -145,8 +145,57 @@ def _get_artist_metadata(spotify, artist_names):
         )
     return full_artist_metadata
 
+def _insert_songs(songs, artist, audio_features, kb_api):
+    """Insert given songs into Knowledge Base.
+
+    Params:
+        songs (dict): as returned by SpotifyClient.get_top_songs()
+            e.g. {
+                "thank u, next": {
+                    duration_ms: 207320,
+                    id: "3e9HZxeyfWwjeyPAMmWSSQ",
+                    popularity: 92,
+                    uri: "spotify:track:3e9HZxeyfWwjeyPAMmWSSQ"
+                },
+                ...
+            }
+        artist (string): e.g. "Ariana Grande".
+        audio_features (dict): key is song ID, value is Spotify audio feature data.
+            e.g. {
+                '1TEL6MlSSVLSdhOSddidlJ': {
+                    'acousticness': 0.78,   'danceability': 0.647,
+                    'duration_ms': 171573,  'energy': 0.309,
+                    'liveness': 0.202,      'loudness': -7.948,
+                    'mode': 0,              'speechiness': 0.0366,
+                    'tempo': 87.045,        'time_signature': 4,
+                    'valence': 0.195,       'key': 7,
+                    'instrumentalness': 7.41e-06,
+                },
+                ...
+            }
+        kb_api (KnowledgeBaseApi).
+    """
+    for song_name, song_info in songs.items():
+        cur_audio_features = audio_features[song_info['id']]
+        cur_mode = cur_audio_features['mode']
+        cur_audio_features['mode'] = 'major' if cur_mode == 1 else 'minor'
+
+        kb_api.add_song(
+            song_name,
+            artist,
+            duration_ms=song_info["duration_ms"],
+            popularity=song_info["popularity"],
+            spotify_uri=song_info["uri"],
+            audio_features=cur_audio_features,
+        )
+
 def create_and_populate_db_with_spotify(spotify_client_id, spotify_secret_key, artists, path=None):
-    """Pulls data from Spotify and adds it to knowledge base through its API.
+    """Pull data from Spotify for given artists and adds it to knowledge base through its API.
+
+    For each of the given artists, find and add all of the following to the knowledge base:
+    - general artist metadata (e.g. number of followers)
+    - top songs
+    - related artists, along with their own metadata and top songs
 
     Params:
         spotify_client_id (str) e.g. "".
@@ -168,23 +217,19 @@ def create_and_populate_db_with_spotify(spotify_client_id, spotify_secret_key, a
         kb_api.add_artist(artist_name, artist_info["genres"], artist_info["num_followers"])
 
         songs = spotify.get_top_songs(artist_info['id'], SPOTIFY_COUNTRY_ISO)
-        all_audio_features = spotify.get_audio_features([song_info['id'] for _, song_info in songs.items()])
-        for song_name, song_info in songs.items():
-            cur_audio_features = all_audio_features[song_info['id']]
-            cur_mode = cur_audio_features['mode']
-            cur_audio_features['mode'] = 'major' if cur_mode == 1 else 'minor'
-
-            kb_api.add_song(
-                song_name,
-                artist_name,
-                song_info["popularity"],
-                song_info["duration_ms"],
-                song_info["uri"],
-                cur_audio_features,
-            )
+        audio_features = spotify.get_audio_features(
+            [song_info['id'] for _, song_info in songs.items()]
+        )
+        _insert_songs(songs, artist_name, audio_features, kb_api)
 
         for rel_artist_name, rel_artist_info in artist_info["related_artists"].items():
             kb_api.add_artist(rel_artist_name, rel_artist_info["genres"], rel_artist_info["num_followers"])
             kb_api.connect_entities(artist_name, rel_artist_name, "similar to", 100)
             kb_api.connect_entities(rel_artist_name, artist_name, "similar to", 100)
+            songs = spotify.get_top_songs(rel_artist_info['id'], SPOTIFY_COUNTRY_ISO)
+            audio_features = spotify.get_audio_features(
+                [song_info['id'] for _, song_info in songs.items()]
+            )
+            _insert_songs(songs, rel_artist_name, audio_features, kb_api)
+
     return path_to_db

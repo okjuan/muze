@@ -22,6 +22,65 @@ class KnowledgeBaseAPI:
             "speechiness", "valence", "musical_key", "time_signature",
         ])
 
+        LESS_COMP = lambda val1, val2: val1 < val2
+        MORE_COMP = lambda val1, val2: val1 > val2
+        self.SONG_ADJECTIVES = dict(
+            [ # workaround for keys containing spaces
+                ("more acoustic", dict(name='acousticness', comparison=MORE_COMP)),
+                ("less acoustic", dict(name='acousticness', comparison=LESS_COMP)),
+                ("less dancey", dict(name='danceability', comparison=LESS_COMP)),
+                ("more popular", dict(name="popularity", comparison=MORE_COMP)),
+                ("less popular", dict(name="popularity", comparison=LESS_COMP)),
+            ],
+            happier=dict(name='valence', comparison=MORE_COMP),
+            sadder=dict(name='valence', comparison=LESS_COMP),
+            dancier=dict(name='danceability', comparison=MORE_COMP),
+            longer=dict(name='duration_ms', comparison=MORE_COMP),
+            shorter=dict(name='duration_ms', comparison=MORE_COMP),
+        )
+
+    def _get_audio_feature_name(self, adjective):
+        """Maps comparison phrase to its audio feature name.
+
+        E.g.
+            "more acoustic" => "acousticness"
+            "less acoustic" => "acousticness"
+            "happier"       => "valence"
+            "sadder"        => "valence"
+
+        Params:
+            adjective (str): e.g. "more acoustic", "happier".
+
+        Returns:
+            (str): name of audio feature corresponding to adjective
+                None if not found. e.g. "acousticness" for "more acoustic".
+        """
+        return self.SONG_ADJECTIVES.get(adjective, {}).get("name")
+
+    def _get_comparison_func(self, adjective):
+        """Returns a function f that determines whether the given adjective
+        describes the relationship between two values.
+
+        E.g. for adjective "more acoustic", function f is returned such that:
+            - f(val1=0.1, val2=0.2) returns True.
+            - f(val1=0.2, val2=0.1) returns False.
+            - f(val1=0.2, val2=0.2) returns False.
+            Where the args val1 and val2 are values for levels of
+            acousticness.
+
+        Params:
+            adjective (str): e.g. "more acoustic", "happier".
+
+        Returns:
+            (func): with two parameters, val1 and val2, which
+                are compared to determine whether val1 has relationship with
+                val2 as described by the given adjective.
+                For example: if adjective is "more acoustic", then calling the
+                function with val1=0.1 and val2=0.5 (for acousticness)
+                returns True since val2 has a higher acoustic value.
+        """
+        return self.SONG_ADJECTIVES.get(adjective, {}).get("comparison")
+
     def __str__(self):
         return "Knowledge Representation API object for {} DB.".format(self.dbName)
 
@@ -32,61 +91,60 @@ class KnowledgeBaseAPI:
         conn.execute("PRAGMA foreign_keys = 1")
         return conn
 
-    def get_less_popular_songs(self, song_name):
-        """Returns all songs with lower Spotify popularity score than given song.
+    def songs_are_related(self, song1, song2, rel_str):
+        """Determines whether any two given songs are related in the way described.
+
+        E.g. Determines whether 'thank u, next' is 'more acoustic' than 'bad idea'.
+        E.g. Determines whether 'thank u, next' is 'happier' than 'bad idea'.
+
+        NOTE: order of params matters.
 
         Params:
-            song_name (str): e.g. "thank u, next"
+            song1 (string): song name (e.g. "thank u, next").
+            song2 (string): song name (e.g. "thank u, next").
 
         Returns:
-            (list of dicts): each dict contains song_name and artist_name keys. Empty if not matches found.
-                e.g. [
-                    {
-                        id: 1,
-                        song_name: "Despacito",
-                        artist_name: "Justin Bieber",
-                        duration_ms: 11111,
-                        popularity: 100,
-                    },
-                    ...
-                ]
+            (bool): True iff the two given songs are related in the way described.
         """
-        song_data = self.get_song_data(song_name)
-        if song_data == []:
-            print(f"ERROR: Could not get popularity of song '{song_name}': not in database.")
-            return []
-        else:
-            print(f"WARN: Found multiple songs matching name '{song_name}', using first result: {song_data[0]}.")
-            popularity = song_data[0]['popularity']
+        if rel_str not in self.SONG_ADJECTIVES.keys():
+            print(f"ERROR: relationship '{rel_str}' is not recognized.")
+            return False
 
-        try:
-            with closing(self.connection) as con:
-                # Auto-commit
-                with con:
-                    with closing(con.cursor()) as cursor:
-                        # Inner query retrieves info about songs that are less popular
-                        cursor.execute("""
-                            SELECT x.id, x.name, x.popularity, x.duration_ms, nodes.name, x.spotify_uri
-                            FROM (
-                                SELECT *
-                                FROM nodes JOIN songs on id == node_id
-                                WHERE popularity < ?
-                            ) as x JOIN nodes ON x.main_artist_id == nodes.id;
-                        """, (popularity,))
-                        return [
-                            dict(
-                                id=x[0],
-                                song_name=x[1],
-                                popularity=x[2],
-                                duration_ms=x[3],
-                                artist_name=x[4],
-                                spotify_uri=x[5],
-                            ) for x in cursor.fetchall()
-                        ]
+        compare_func = self._get_comparison_func(rel_str)
+        if compare_func is None:
+            print(f"ERROR: could not find comparison function for relationship: '{rel_str}'")
+            return False
 
-        except sqlite3.OperationalError as e:
-            print("ERROR: Could not find songs less popular than '{}': {}".format(song_name, str(e)))
-            return []
+        feature_name = self._get_audio_feature_name(rel_str)
+        if feature_name is None:
+            print(f"ERROR: could not find feature name for relationship: '{rel_str}'")
+            return False
+
+        song1_data = self.get_song_data(song1)
+        song2_data = self.get_song_data(song2)
+
+        if len(song1_data) == 0:
+            print(f"ERROR: Could not find song {song1}")
+            return False
+        if len(song2_data) == 0:
+            print(f"ERROR: Could not find song {song2}")
+            return False
+
+        if len(song1_data) > 1:
+            print(f"WARN: Found multiple hits for song: '{song1}'. Picking one arbitrarily.")
+        if len(song2_data) > 1:
+            print(f"WARN: Found multiple hits for song: '{song2}'. Picking one arbitrarily.")
+
+        song1_val = song1_data[0].get(feature_name)
+        song2_val = song2_data[0].get(feature_name)
+
+        if song1_val is None:
+            print(f"ERROR: could not find '{feature_name}' value for song '{song1}'")
+            return False
+        if song2_val is None:
+            print(f"ERROR: could not find '{feature_name}' value for song '{song2}'")
+            return False
+        return compare_func(song1_val, song2_val)
 
     def get_related_entities(self, entity_name, rel_str="similar to"):
         """Finds all entities connected to the given entity in the semantic network.
