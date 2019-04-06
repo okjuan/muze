@@ -116,44 +116,6 @@ class TestMusicKnowledgeBaseAPI(unittest.TestCase):
         res = self.kb_api.get_songs_by_artist("Unknown artist")
         self.assertEqual(res, None, "Unexpected songs retrieved for unknown artist.")
 
-    def test_get_less_popular_songs(self):
-        expected_res = [{
-            'artist_name': 'Justin Bieber',
-            'duration_ms': 222222,
-            'id': 10,
-            'popularity': 10,
-            'song_name': 'Despacito',
-            'spotify_uri': 'spotify:track:Despacito',
-        }, {
-            'artist_name': 'Justin Bieber',
-            'duration_ms': 333333,
-            'id': 14,
-            'popularity': 20,
-            'song_name': 'Sorry',
-            'spotify_uri': 'spotify:track:Sorry',
-        }, {
-            'artist_name': 'Justin Timberlake',
-            'duration_ms': 444444,
-            'id': 11,
-            'popularity': 30,
-            'song_name': 'Rock Your Body',
-            'spotify_uri': 'spotify:track:RockYourBody',
-        }]
-        res = self.kb_api.get_less_popular_songs("Beautiful Day")
-
-        self.assertEqual(res, expected_res,
-            "Unexpected result of retrieving songs less popular than 'Beautiful Day'")
-
-        res = self.kb_api.get_less_popular_songs("Rock Your Body")
-
-        # 'Despacito' and 'Sorry' are less popular songs than 'Rock Your Body'
-        self.assertEqual(res, expected_res[:2],
-            "Unexpected result of retrieving songs less popular than 'Rock Your Body'")
-
-    def test_get_less_popular_songs_unknown_song(self):
-        res = self.kb_api.get_less_popular_songs("Unknown song")
-        self.assertEqual(res, [], "Expected no results for unknown song.")
-
     def test_songs_are_related_popularity(self):
         self.assertEqual(
             self.kb_api.songs_are_related('Beautiful Day', 'Despacito', "less popular"),

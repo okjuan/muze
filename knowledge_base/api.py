@@ -91,62 +91,6 @@ class KnowledgeBaseAPI:
         conn.execute("PRAGMA foreign_keys = 1")
         return conn
 
-    def get_less_popular_songs(self, song_name):
-        """Returns all songs with lower Spotify popularity score than given song.
-
-        Params:
-            song_name (str): e.g. "thank u, next"
-
-        Returns:
-            (list of dicts): each dict contains song_name and artist_name keys. Empty if not matches found.
-                e.g. [
-                    {
-                        id: 1,
-                        song_name: "Despacito",
-                        artist_name: "Justin Bieber",
-                        duration_ms: 11111,
-                        popularity: 100,
-                    },
-                    ...
-                ]
-        """
-        song_data = self.get_song_data(song_name)
-        if song_data == []:
-            print(f"ERROR: Could not get popularity of song '{song_name}': not in database.")
-            return []
-        else:
-            print(f"WARN: Found multiple songs matching name '{song_name}', using first result: {song_data[0]}.")
-            popularity = song_data[0]['popularity']
-
-        try:
-            with closing(self.connection) as con:
-                # Auto-commit
-                with con:
-                    with closing(con.cursor()) as cursor:
-                        # Inner query retrieves info about songs that are less popular
-                        cursor.execute("""
-                            SELECT x.id, x.name, x.popularity, x.duration_ms, nodes.name, x.spotify_uri
-                            FROM (
-                                SELECT *
-                                FROM nodes JOIN songs on id == node_id
-                                WHERE popularity < ?
-                            ) as x JOIN nodes ON x.main_artist_id == nodes.id;
-                        """, (popularity,))
-                        return [
-                            dict(
-                                id=x[0],
-                                song_name=x[1],
-                                popularity=x[2],
-                                duration_ms=x[3],
-                                artist_name=x[4],
-                                spotify_uri=x[5],
-                            ) for x in cursor.fetchall()
-                        ]
-
-        except sqlite3.OperationalError as e:
-            print("ERROR: Could not find songs less popular than '{}': {}".format(song_name, str(e)))
-            return []
-
     def songs_are_related(self, song1, song2, rel_str):
         """Determines whether any two given songs are related in the way described.
 

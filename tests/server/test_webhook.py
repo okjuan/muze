@@ -6,22 +6,6 @@ class TestWebhook(unittest.TestCase):
     def setUp(self):
         self.test_app = endpoint.app
 
-    def test_get_more_obscure_song(self):
-        with self.test_app.app_context():
-            res = endpoint.get_more_obscure_song("thank u, next")
-        msg = res._messages[0]['text']['text'][0]
-        self.assertIn("Found", msg, "Expected to find a song.")
-
-    def test_get_more_obscure_song_none_found(self):
-        with self.test_app.app_context():
-            res = endpoint.get_more_obscure_song("If Only")
-        msg = res._messages[0]['text']['text'][0]
-        self.assertEqual(
-            msg,
-            "Unfortunately, I couldn't find any songs similar to but more obscure than If Only.",
-            "Expected not to find a song.",
-        )
-
     def test_find_song(self):
         with self.test_app.app_context():
             res = endpoint.find_song("thank u, next", artist=None)

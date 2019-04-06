@@ -45,37 +45,6 @@ def find_song(song, artist):
             spotify_uri = hits[0]['spotify_uri']
             return tell(f"Found {song} by {cur_artist}").link_out("Spotify", spotify_uri)
 
-@assist.action('Get More Obscure Song', mapping=dict(song_name='song'))
-def get_more_obscure_song(song_name):
-    """Fetches a more obscure song than the given one and by a similar artist.
-
-    Params:
-        song_name (str): e.g. "thank u, next"
-    """
-    song_data = music_api.get_song_data(song_name)
-    if len(song_data) == 0:
-        return tell(f"Couldn't find song '{song_name}'")
-    elif len(song_data) > 1:
-        print(f"WARN: Found {len(song_data)} hits for song '{song_name}'. Choosing one arbitrarily.")
-
-    artist_name = song_data[0]['artist_name']
-
-    more_obscure_songs = music_api.get_less_popular_songs(song_name)
-    similar_artists = music_api.get_related_entities(artist_name)
-
-    results = []
-    for tmp_song_data in more_obscure_songs:
-        if tmp_song_data['artist_name'] in similar_artists:
-            results.append(tmp_song_data)
-
-    if len(results) == 0:
-        return tell(f"Unfortunately, I couldn't find any songs similar to but more obscure than {song_name}.")
-    else:
-        res_song_name = results[0]['song_name']
-        res_artist_name = results[0]['artist_name']
-        spotify_uri = results[0]['spotify_uri']
-        return tell(f"Found {res_song_name} by {res_artist_name}").link_out("Spotify", spotify_uri)
-
 @assist.action('Find Slightly Different Song', mapping=dict(adjective='audio_feature_adjective'))
 def get_finegrained_recommendation(song, adjective):
     """
