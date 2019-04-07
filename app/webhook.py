@@ -23,11 +23,8 @@ app = Flask(__name__)
 assist = Assistant(app, route='/webhook', project_id='muze-2b5fa')
 music_api = KnowledgeBaseAPI('knowledge_base/knowledge_base.db')
 
-@app.route('/')
-def hello():
-    return render_template("index.html")
 
-@app.route('/player')
+@app.route('/')
 def get_player():
     return render_template("player.html")
 
