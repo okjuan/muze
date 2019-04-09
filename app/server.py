@@ -7,7 +7,7 @@ made via the corresponding Dialogflow agent. See here for more info
 flask_assistant framework.
 
 Execution:
-    $ python server/webhook.py
+    $ python app/server.py
 """
 
 from flask import Flask, render_template

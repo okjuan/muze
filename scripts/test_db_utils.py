@@ -45,7 +45,7 @@ def create_and_populate_db(path: str = None):
     return db_path
 
 def create_db(path: str = None):
-    """Creates and fills sqlite database, saving .db file to 'tests/'
+    """Creates and fills sqlite database, saving .db file to 'unit_tests/'
    directory, unless another path is specified.
 
    Tries to find SQL scripts depending on where this module is invoked from.
@@ -64,18 +64,18 @@ def _get_path_prefixes():
     cur_dir = os.getcwd().split("/")[-1]
 
     # From tests folder in project root dir
-    if cur_dir == "tests":
+    if cur_dir == "unit_tests":
         test_db_path_prefix = ""
         scripts_path_prefix = "../scripts/"
 
     # From scripts folder in project root dir
     elif cur_dir == "scripts":
-        test_db_path_prefix = "../tests/"
+        test_db_path_prefix = "../unit_tests/"
         scripts_path_prefix = ""
 
     # From project root dir
     else:
-        test_db_path_prefix = "tests/"
+        test_db_path_prefix = "unit_tests/"
         scripts_path_prefix = "scripts/"
     return test_db_path_prefix, scripts_path_prefix
 
