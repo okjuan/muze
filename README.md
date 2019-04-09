@@ -1,12 +1,32 @@
 ## Overview
-This project consists of a semantic network of musical entities (songs, artists, genres, etc) with an API for retrieving and adding info. The included database was populated with data retrieved from Spotify's public web API. Originally, I developed this system as part of a broader [collaborative project](https://github.com/MIR-Directed-Research/intelligent-music-recommender).
+This is an app for discovering and listening to music:
 
-Additionally, a server endpoint for use by a Dialogflow agent is under construction. Specifically, the endpoint is a [webhook for fulfillment](https://dialogflow.com/docs/fulfillment) of a user request as handled by Dialogflow.
+> Play No One by Alicia Keys
+
+> Play something like No One but more acoustic
+
+> Play something like No One but less popular
+
+> Play something like No One but sadder
+
+The app integrates with:
+* Spotify's [Web Playback SDK](https://developer.spotify.com/documentation/web-playback-sdk/) for streaming music and [Web API](https://developer.spotify.com/documentation/web-api/) compiling music metadata
+* [Dialogflow](https://dialogflow.com/) to create a natural language user interface
+
+The app consists of:
+* A minimal web client that communicates user events to the server and streams music
+* A server app that:
+    * handles user events from the client
+    * communicates with a Dialogflow agent to process raw natural language user input
+    * exposes a webhook endpoint for Dialogflow to call during [fulfillment](https://dialogflow.com/docs/fulfillment)
+    * contains a music knowledge API that exposes info about musical entities (songs, artists, genres, relationships therein) organized in a semantic network
+        * originally developed as part of an another [collaborative project](https://github.com/MIR-Directed-Research/intelligent-music-recommender).
 
 ## Setup
 ### Prerequisites
 * [SQLite3](https://www.sqlite.org/download.html)
-* [Python](https://www.python.org/downloads/) 3.5 or higher
+* [Python](https://www.python.org/downloads/) 3.5 or higher and [pip](https://pypi.org/project/pip/)
+* [Spotify premium account](https://www.spotify.com/us/premium/?utm_source=ca-en_brand_contextual_text&utm_medium=paidsearch&utm_campaign=alwayson_ucanz_ca_premiumbusiness_premium_brand+contextual+text+exact+ca-en+google&gclid=CjwKCAjwhbHlBRAMEiwAoDA3450erN_3OgzZ-r-D7byldS_fHtBu9qB4ezr_pEoPDQsepMWP1Q_7NxoCWvEQAvD_BwE&gclsrc=aw.ds) for streaming music
 
 ### Dependencies
 Whether or not you use a virtual environment:
@@ -14,45 +34,27 @@ Whether or not you use a virtual environment:
 pip install -r requirements.txt
 ```
 
-## API
-In general, the Knowledge Representation (KR) API exposes a collection of functions that encapsulate all SQL queries and logic relating to managing the database; through the KR API, callers may retrieve from and add information to the database. The following functions allow *addition* of information to the database through an instance `kr_api` of the `KnowledgeBaseAPI` class:
-
-* `kr_api.add_artist()`: Inserts given values into two tables: `artists` and `nodes`.
-  * Given artist is only added if they are not already in the database.
-  * Given artist is either added to both tables or neither.
-* `kr_api.add_song()`: Inserts given values into two tables: songs and nodes.
-  * Given song is either added to both tables or neither.
-  * Given artist is not ambiguous (only matches one 'artist' entry in nodes table).
-  * Given tuple (song, artist) is only added if it does not already exist in database.
-* `kr_api.add_genre()`: Adds given value into two tables: genres and nodes.
-  * Given genre is eiter added to both tables or neither.
-  * Given genre is only added if not already in the database.
-* `kr_api._add_node()`: Adds given entity to the nodes table.
-  * Intended for "private" use only, as indicated by the leading underscore in the function's name [8]
-  * Used by all other `add_` functions.
-* `kr_api.connect_entities(source_node_name, dest_node_name, rel_str, score)`: Insert into `edges` table.
-  * Creates an edge in semantic network with given label `rev_str` (e.g. "similar to", "of genre") and score
-
-Various functions allow *retrieval* of information to the database; some of them are described below:
-
-* `kr_api.get_songs(artist)`: Retrieves list of song names for given artist name.
-* `kr_api.get_artist_data(artist_name)`: Retrieves associated genres, node ID, and number of Spotify followers for given artist.
-* `kr_api.get_song_data(song_name)`: Gets all songs that match given name, along with their artists.
-  * List of all hits, each containing info about their node ID, artist (by name), duration in milliseconds, and popularity according to Spotify.
-* `kr_api.get_related_entities(entity_name, rel_str)`: Finds all entities connected to the given entity by an edge with the given label `rel_str`.
-  * This implements a key part of our KR system's functionality: **querying the semantic network!**
-  * The given entity may be any of song, an artist, etc. The returned entity may or may not be the same type of entity.
+## Music Knowledge API
+In general, the Knowledge Representation (KR) API exposes a collection of functions that encapsulate all SQL queries and logic relating to managing the database; through the KR API, callers may retrieve from and add information to the database. A detailed description is available in `design_docs/Music Knowledge Base Design Doc.pdf`.
 
 ## Testing
 ### Demoing the Application
-This section contains instructions for testing this serverside app in connection with its corresponding Dialogflow agent. Installing [ngrok](https://ngrok.com/) is an easy way to run the service the locally and make it publicly available so that it can communicate with the Dialogflow agent.
+This section contains brief instructions for running the app. It is necessary to make the Muze service **publicly available** so that it can communicate with the Dialogflow agent; [ngrok](https://ngrok.com/) is an easy way to relay HTTP messages between the locally running Muze service (e.g. on localhost) and a proxy server.
 
-* Run the serverside app: `python server/webhook.py`
+*NOTE*: A Spotify premium account is necessary to stream music.
+
+#### Local Set Up
+* Run the serverside app: `python app/server.py`
 * Run `./ngrok http 5000` to connect local server to relay server, making it publicly available
 * Copy HTTPS URL on the screen (e.g. `https://f313aea9.ngrok.io`)
 * In Dialogflow console, in Fulfillment tab, enable the Webhook option and paste the ngrok HTTPS url with `/webhook` appended to it (e.g. `https://f313aea9.ngrok.io/webhook`)
-* Open `player.html` and enter "Who is the song If Only by?", the UI should play the song _If Only_ by Raveena.
-  * Make sure to get fresh access tokens for both [Spotify](https://developer.spotify.com/documentation/web-playback-sdk/quick-start/#authenticating-with-spotify) and Dialogflow (with gcloud CLI, as described [here](https://dialogflow.com/docs/reference/v2-auth-setup)), and paste them in `client/player.js` and `client/script.js` respectively
+* Make sure to get a fresh access token for [Spotify](https://developer.spotify.com/documentation/web-playback-sdk/quick-start/#authenticating-with-spotify), and paste them in `client/player.js`; this will be replaced with
+
+#### Using the App
+* Navigate to `http://localhost:5000` and enter "Play No One by Alicia Keys".
+* The webpage should begin playing "No One" by Alicia Keys.
+* In addition to retrieving explicitly given songs, the app is capable of serving fine grained recommendations: enter "Play something like No One but more acoustic".
+* The webpage should beging playing "If I Ain't Got You" by Alicia Keys (or perhaps another song)
 
 ### Unit Tests
 Run the tests from the project's root folder:
@@ -60,7 +62,7 @@ Run the tests from the project's root folder:
 $ python run_tests.py
 ...
 ----------------------------------------------------------------------
-Ran 32 tests in 0.943s
+Ran 56 tests in 0.943s
 
 OK
 ```
