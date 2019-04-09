@@ -11,7 +11,7 @@ To run the tests:
 """
 from tests.knowledge_base.test_knowledge_base_api import TestMusicKnowledgeBaseAPI
 from tests.knowledge_base.test_db_schema import TestDbSchema
-from tests.server.test_webhook import TestWebhook
+from tests.app.server.test_webhook import TestWebhook
 
 if __name__ == '__main__':
     unittest.main()

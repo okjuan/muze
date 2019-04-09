@@ -1,5 +1,5 @@
 import unittest
-import server.webhook as endpoint
+import app.webhook as endpoint
 
 # TODO: use test DB
 class TestWebhook(unittest.TestCase):
