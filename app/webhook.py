@@ -10,7 +10,7 @@ Execution:
     $ python server/webhook.py
 """
 
-from flask import Flask
+from flask import Flask, render_template
 from flask_assistant import Assistant, ask, tell
 import logging
 import sys
@@ -22,6 +22,14 @@ logging.getLogger('flask_assistant').setLevel(logging.DEBUG)
 app = Flask(__name__)
 assist = Assistant(app, route='/webhook', project_id='muze-2b5fa')
 music_api = KnowledgeBaseAPI('knowledge_base/knowledge_base.db')
+
+@app.route('/')
+def hello():
+    return render_template("index.html")
+
+@app.route('/player')
+def get_player():
+    return render_template("player.html")
 
 @assist.action('Find Song')
 def find_song(song, artist):

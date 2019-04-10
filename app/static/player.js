@@ -10,7 +10,7 @@ var player = undefined;
 
 window.onSpotifyWebPlaybackSDKReady = () => {
     // for prototyping phase, getting the bearer token manually is sufficient
-    const token = 'BQCwswA6k1V3RHk9fBJCAUFBRpFm8K6UTftcVJ-RW1YKm4H7kYbCxc10ZHVRQZAvsau6BLpTdGaZrUydxFNlQf4ofZCU9dB4qNQFh3CnrGMF46xpsW-HqvRFWIRvvIB7jGjF_K9dxL5jwPjje5fMCHjjaoAkL_E0Ahy4PA';
+    const token = 'BQCNuoy4qhEwi2NasH5-_-4OFY1iAzJWz0ucasTRG5yirQyoT3IGoRP-vL2lbWebvHKEfIKyVmpn9HtsZswj3Ld5XITgyvavs9UKNs7XUIwc444zTy5WbZK1vuJcrrBw1_61dmP3IesBiNIZcEfC4Zt-waypvrDWPWK8WA';
     // Spotify is linked in HTML page
     player = new Spotify.Player({
       name: 'Muze',
