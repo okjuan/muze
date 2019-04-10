@@ -6,15 +6,39 @@
     Sets up Spotify web player and exposes play method to use the player.
 */
 
-var player = undefined;
+// =====
+// Adapted from https://glitch.com/edit/#!/spotify-implicit-grant
+const hash = window.location.hash
+    .substring(1)
+    .split('&')
+    .reduce(function (initial, item) {
+        if (item) {
+            var parts = item.split('=');
+            initial[parts[0]] = decodeURIComponent(parts[1]);
+        }
+        return initial;
+}, {});
+window.location.hash = '';
 
+let bearer_token = hash.access_token;
+
+const authEndpoint = 'https://accounts.spotify.com/authorize';
+const clientId = '90897bcca11f4c78810f7ecadfc0a4ed';
+const redirectUri = 'https://muze.serveo.net'
+const scopes = ['streaming'];
+
+// If there is no token, redirect to Spotify authorization
+if (!bearer_token) {
+    window.location = encodeURI(`${authEndpoint}?client_id=${clientId}&redirect_uri=${redirectUri}&scope=${scopes}&response_type=token&show_dialog=true`);
+}
+// =====
+
+var player = undefined;
 window.onSpotifyWebPlaybackSDKReady = () => {
-    // for prototyping phase, getting the bearer token manually is sufficient
-    const token = 'BQCNuoy4qhEwi2NasH5-_-4OFY1iAzJWz0ucasTRG5yirQyoT3IGoRP-vL2lbWebvHKEfIKyVmpn9HtsZswj3Ld5XITgyvavs9UKNs7XUIwc444zTy5WbZK1vuJcrrBw1_61dmP3IesBiNIZcEfC4Zt-waypvrDWPWK8WA';
     // Spotify is linked in HTML page
     player = new Spotify.Player({
       name: 'Muze',
-      getOAuthToken: cb => { cb(token); }
+      getOAuthToken: cb => { cb(bearer_token); }
     });
 
     // Error handling
