@@ -12,12 +12,13 @@ from knowledge_base.api import KnowledgeBaseAPI
 
 
 SONG_SET_SIZE = 1
+OSX_ENGLISH_VOICES = ["Alex", "Daniel", "Fiona", "Karen", "Moira", "Samantha", "Tessa", "Veena"]
 SH_GENERATE_DIALOGFLOW_ACCESS_TOKEN = "gcloud auth application-default print-access-token"
-SH_CREATE_AUDIO_FILE = 'say -o play_song.wav --data-format=LEI16@22050 "{0}"'
+SH_CREATE_AUDIO_FILE = 'say -v {voice} -o play_song.wav --data-format=LEI16@22050 "{phrase}"'
 SH_B64_ENCODE_AUDIO_FILE = f"base64 -i play_song.wav"
 
 
-def test_find_slightly_different_song_intent(phrase_formats, audio_feature_adjectives, songs, out_file):
+def test_find_slightly_different_song_intent(phrase_formats, audio_feature_adjectives, songs, out_file, voice="Alex"):
     """Checks intent, params, and confidence level in Dialogflow request for
     detecting the 'Find Slightly Different Song' intent.
 
@@ -26,6 +27,8 @@ def test_find_slightly_different_song_intent(phrase_formats, audio_feature_adjec
         audio_feature_adjectives (list): 2-tuples, where 1st field is the name of one to be sent
             and the 2nd field is the name of the one expected to be detected by Dialogflow.
         songs (list): e.g. ["thank u, next", "bad idea", "needy"].
+        out_file (str): name of output file.
+        voice (str): an OSX voice e.g. "Alex".
     """
     out_file.write("Testing intent: 'Find Slightly Different Song'\n")
     detect_intent_failures, song_extract_failures, adj_extract_failures = 0, 0, 0
@@ -35,7 +38,7 @@ def test_find_slightly_different_song_intent(phrase_formats, audio_feature_adjec
             for song in songs:
                 test_passed = True
                 test_phrase = phrase_f.format(song=song, adj=adj),
-                resp_contents = send_detect_intent_req(test_phrase)
+                resp_contents = send_detect_intent_req(test_phrase, voice=voice)
                 if resp_contents is None:
                     print(f"ERROR: could not run test with phrase: '{test_phrase}'")
                     continue
@@ -72,7 +75,7 @@ def test_find_slightly_different_song_intent(phrase_formats, audio_feature_adjec
         {num_passed}/{num_tests} (passed/total)
     """)
 
-def test_find_song_intent(phrase_formats, songs, out_file):
+def test_find_song_intent(phrase_formats, songs, out_file, voice="Alex"):
     """Checks intent, params, and confidence level in Dialogflow request for
     detecting the 'Find Song' intent.
     """
@@ -83,7 +86,7 @@ def test_find_song_intent(phrase_formats, songs, out_file):
         for song in songs:
             test_passed = True
             test_phrase = phrase_f.format(song=song),
-            resp_contents = send_detect_intent_req(test_phrase)
+            resp_contents = send_detect_intent_req(test_phrase, voice)
             if resp_contents is None:
                 print(f"ERROR: could not run test with phrase: '{test_phrase}'")
                 continue
@@ -114,11 +117,12 @@ def test_find_song_intent(phrase_formats, songs, out_file):
         ===
     """)
 
-def send_detect_intent_req(phrase):
+def send_detect_intent_req(phrase, voice="Alex"):
     """Requests Dialogflow agent to detect intent with given audio data.
 
     Params:
         phrase (string): e.g. "Play thank u, next".
+        voice (string): one of the OS X supported voices (e.g. "Alex", "Moira").
 
     Returns:
         (dict): Key fields of response body used for testing. None if request fails.
@@ -131,8 +135,11 @@ def send_detect_intent_req(phrase):
                 "conf_level": 0.82,
             }
     """
+    if voice not in OSX_ENGLISH_VOICES:
+        print("WARN: using non-English voice:", voice)
+
     dialogflow_access_token = run_sh(SH_GENERATE_DIALOGFLOW_ACCESS_TOKEN)
-    run_sh(SH_CREATE_AUDIO_FILE.format(phrase))
+    run_sh(SH_CREATE_AUDIO_FILE.format(voice=voice, phrase=phrase))
     b64_encoded_audio = run_sh(SH_B64_ENCODE_AUDIO_FILE)
 
     resp = requests.post(
@@ -182,6 +189,7 @@ def run_sh(cmd):
     return res.stdout.strip().decode('utf-8')
 
 def main():
+    voice = "Alex"
     try:
         music_api = KnowledgeBaseAPI('knowledge_base/knowledge_base.db')
     except Exception as e:
@@ -189,23 +197,25 @@ def main():
         print("Error:", e)
         exit()
 
-    if len(sys.argv) == 2:
+    if len(sys.argv) >= 2:
         try:
             num_songs = int(sys.argv[1])
         except Exception:
             print("ERR: runtime arg should be an int, but got:", sys.argv[1])
             num_songs = SONG_SET_SIZE
             pass
+        if len(sys.argv) == 3:
+            voice = sys.argv[2].strip()
     else:
         num_songs = SONG_SET_SIZE
 
     print(f"Running tests with {num_songs} songs...")
     test_songs = random.sample(music_api.get_all_song_names(), num_songs)
 
-    with open("test_find_song.out", "w") as f:
-        test_find_song_intent(["Play {song}", "Play song {song}"], test_songs, f)
+    with open("test_find_song.txt", "w") as f:
+        test_find_song_intent(["Play {song}", "Play song {song}"], test_songs, f, voice=voice)
 
-    with open("test_find_slightly_different_song.out", "w") as f:
+    with open("test_find_slightly_different_song.txt", "w") as f:
         test_phrases = ["Find something like {song} but {adj}", "Play a song like {song} but {adj}"]
         adjectives = [
             # Actual            # Nominal
@@ -213,7 +223,7 @@ def main():
             ("happier",         "happier"),
             ("more obscure",    "less popular"),
         ]
-        test_find_slightly_different_song_intent(test_phrases, adjectives, test_songs, f)
+        test_find_slightly_different_song_intent(test_phrases, adjectives, test_songs, f, voice=voice)
         f.write(f"Tested phrases: {test_phrases}\n")
         f.write(f"Test adjectives: {[a[0] for a in adjectives]}\n")
 
