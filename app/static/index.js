@@ -21,6 +21,7 @@ socket.on('session key', (data) => {
 socket.on('play song', (data) => {
   respond(data['msg']);
   playSong(data['spotify_uri']);
+  updateInputPlaceholder();
 });
 
 socket.on('message', (data) => {
@@ -34,7 +35,19 @@ var sessionKey,
   messageRecording = "Recording...",
   messageCouldntHear = "I couldn't hear you, could you say that again?",
   messageInternalError = "Oh no, there has been an internal server error",
-  messageSorry = "I'm sorry, I don't have the answer to that yet.";
+  messageSorry = "I'm sorry, I don't have the answer to that yet.",
+  placeholders = [
+    'e.g. Play thank u, next by Ariana Grande',
+    'e.g. Play a song like needy but more acoustic',
+    "e.g. Play a song like needy but dancier",
+    'e.g. Play No One by Alicia Keys',
+    'e.g. Play a song like No One but more popular',
+    "e.g. Play a song like No One but happier",
+    "e.g. Play a song like No One but sadder",
+    "e.g. Play a song like No One but more electric",
+    "e.g. Play a song like Girl on Fire but more obscure",
+  ],
+  placeholderIdx = 0;
 
 $(document).ready(function() {
   $speechInput = $("#speech");
@@ -128,4 +141,9 @@ function respond(val) {
   }
 
   $("#spokenResponse").addClass("is-active").find(".spoken-response__text").html(val);
+}
+
+function updateInputPlaceholder() {
+  placeholderIdx = (placeholderIdx + 1) % placeholders.length;
+  $('#speech').attr('placeholder', placeholders[placeholderIdx]);
 }

@@ -26,19 +26,16 @@
 </head>
 <body>
   <div class="container">
-    <input id="speech" type="text">
+    <h2 id="title"><em>Muze</em> Player</h2>
+    <input id="speech" type="text" placeholder="e.g. 'Play thank u, next'">
     <button id="rec" class="btn">Speak</button>
-    <button onclick="playSong()" class="btn" id="play-button">Play random song</button>
     <div id="spokenResponse" class="spoken-response">
       <div class="spoken-response__text"></div>
     </div>
-  </div>
-  <div class="debug">
-    <div class="debug__btn btn">
-      Debug JSON results
-    </div>
-    <div class="debug__content">
-      <textarea id="response" cols="40" rows="20"></textarea>
+    <div class="img-container">
+      <a id="album-art-link"><img id="album-art" /></a>
+      <h4 id="track-metadata">Song by Artist</h4>
+      <img id="spotify-logo" src="{{ url_for('static', filename='imgs/Spotify_Logo_RGB_Green.png') }}" />
     </div>
   </div>
 
