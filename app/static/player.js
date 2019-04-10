@@ -25,7 +25,7 @@ let bearer_token = hash.access_token;
 const authEndpoint = 'https://accounts.spotify.com/authorize';
 const clientId = '90897bcca11f4c78810f7ecadfc0a4ed';
 const redirectUri = 'https://muze.serveo.net'
-const scopes = ['streaming'];
+const scopes = ['streaming', 'user-read-playback-state'];
 
 // If there is no token, redirect to Spotify authorization
 if (!bearer_token) {
@@ -33,7 +33,8 @@ if (!bearer_token) {
 }
 // =====
 
-var player = undefined;
+let mostRecentTrackUri = undefined,
+    player = undefined;
 window.onSpotifyWebPlaybackSDKReady = () => {
     // Spotify is linked in HTML page
     player = new Spotify.Player({
@@ -47,9 +48,6 @@ window.onSpotifyWebPlaybackSDKReady = () => {
     player.addListener('account_error', ({ message }) => { console.error(message); });
     player.addListener('playback_error', ({ message }) => { console.error(message); });
 
-    // Playback status updates
-    player.addListener('player_state_changed', state => { console.log(state); });
-
     // Ready
     player.addListener('ready', ({ device_id }) => {
       console.log('Ready with Device ID', device_id);
@@ -58,6 +56,30 @@ window.onSpotifyWebPlaybackSDKReady = () => {
     // Not Ready
     player.addListener('not_ready', ({ device_id }) => {
       console.log('Device ID has gone offline', device_id);
+    });
+
+    // Event https://developer.spotify.com/documentation/web-playback-sdk/reference/#event-player-state-changed
+    // Obj. https://developer.spotify.com/documentation/web-playback-sdk/reference/#object-web-playback-state
+    player.addListener('player_state_changed', ({
+        position,
+        duration,
+        track_window: { current_track }
+    }) => {
+        console.log("Player state changed! Track is now: ", current_track);
+        console.log('Position in Song', position);
+        console.log('Duration of Song', duration);
+        if (current_track !== undefined && current_track['uri'] !== mostRecentTrackUri) {
+            updateAlbumArt(
+                current_track['album']['images'][0]['url'],
+                `https://open.spotify.com/track/${current_track['id']}`
+            );
+            updateTrackInfo(
+                current_track['name'],
+                current_track['artists'][0]['name'],
+                current_track['album']['name']
+            );
+            mostRecentTrackUri = current_track['uri'];
+        }
     });
 
     // Connect to the player!
@@ -95,8 +117,7 @@ const play = ({
 
 const playSong = (spotify_uri) => {
     if (spotify_uri === undefined) {
-        // Run Away With Me by Carly Rae Jepsen
-        spotify_uri = 'spotify:track:7xGfFoTpQ2E7fRF5lN10tr';
+        console.log("Need Spotify URI to play song.");
     }
     if (player !== undefined) {
         play({
@@ -106,4 +127,22 @@ const playSong = (spotify_uri) => {
     } else {
         console.log("Waiting for player to load...");
     }
+}
+
+const updateTrackInfo = (songName, artistName, albumName) => {
+    let elem = $("#track-metadata");
+    elem.text(`${songName} by ${artistName} from ${albumName}`);
+    elem.css('display', 'block');
+}
+
+const updateAlbumArt = (albumArtUrl, songLink) => {
+    let albumArtElem = $('#album-art');
+    albumArtElem.attr('src', albumArtUrl);
+    albumArtElem.attr('height', '200px');
+    albumArtElem.attr('width', '200px');
+    albumArtElem.css('display', 'inline-block');
+
+    let songLinkElem = $('#album-art-link');
+    songLinkElem.attr('href', songLink);
+    songLinkElem.css('display', 'block');
 }
