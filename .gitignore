@@ -3,3 +3,5 @@ spotify_creds.txt
 
 test_find_slightly_different_song.txt
 test_find_song.txt
+
+server_output.txt
