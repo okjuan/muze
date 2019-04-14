@@ -1,3 +1,5 @@
+![Muze Player Screenshot](./imgs/app-screenshot.png)
+
 ## Overview
 The [Muze Player](http://muze-player.herokuapp.com/) is an app for discovering and listening to music. This is its source code repo.
 
