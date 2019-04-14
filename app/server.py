@@ -11,7 +11,10 @@ Execution:
 import dialogflow
 from flask import Flask, render_template
 from flask_socketio import SocketIO
+from google.oauth2 import service_account
+import json
 import logging
+import os
 import random
 import sys
 
@@ -22,7 +25,8 @@ app = Flask(__name__)
 socket_io = SocketIO(app)
 music_api = KnowledgeBaseAPI('knowledge_base/knowledge_base.db')
 
-DIALOGFLOW_PROJECT_NAME = "muze-2b5fa"
+DIALOGFLOW_CREDS = None
+DIALOGFLOW_PROJECT_NAME = None
 CLIENT_SESSION_KEYS, NEW_CLIENT_IDX, = [None for i in range(100)], 0
 CLIENT_COUNT, MAX_CLIENT_SESSIONS = 0, 100
 
@@ -56,8 +60,19 @@ def handle_user_query(data):
 
     print(f"Received query '{data['text']}' with session key: '{data['session_key']}'")
 
-    df_client = dialogflow.SessionsClient()
-    session = df_client.session_path(DIALOGFLOW_PROJECT_NAME, data['session_key'])
+    try:
+        if DIALOGFLOW_CREDS is None:
+            # Depends on env var GOOGLE_APPLICATION_CREDENTIALS
+            df_client = dialogflow.SessionsClient()
+        else:
+            df_client = dialogflow.SessionsClient(credentials=DIALOGFLOW_CREDS)
+        session = df_client.session_path(DIALOGFLOW_PROJECT_NAME, data['session_key'])
+
+    except Exception as e:
+        print("ERROR: Can't talk to dialogflow without creds:", e)
+        socket_io.emit("message", data=dict(msg="Sorry, I'm not feeling well. Please come back later."))
+        return
+
     query_input = dialogflow.types.QueryInput(
         text=dialogflow.types.TextInput(
             text=data['text'],
@@ -171,4 +186,16 @@ def get_finegrained_recommendation(song, adjective):
 
 
 if __name__ == '__main__':
-    socket_io.run(app, debug=True)
+    DIALOGFLOW_PROJECT_NAME = os.environ.get("DIALOGFLOW_PROJECT_NAME")
+    # on Heroku, the port is an environment variable
+    port = int(os.environ.get("PORT", 5000))
+    dialogflow_key_file_raw_json = os.environ.get("DIALOGFLOW_KEY_FILE_RAW")
+
+    if dialogflow_key_file_raw_json is not None:
+        dialogflow_key_file_json = json.loads(dialogflow_key_file_raw_json)
+        DIALOGFLOW_CREDS = service_account.Credentials.from_service_account_info(
+            dialogflow_key_file_json
+        )
+
+    print("Running muze service on port:", port)
+    socket_io.run(app, host="0.0.0.0", port=port)

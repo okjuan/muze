@@ -24,7 +24,7 @@ let bearer_token = hash.access_token;
 
 const authEndpoint = 'https://accounts.spotify.com/authorize';
 const clientId = '90897bcca11f4c78810f7ecadfc0a4ed';
-const redirectUri = 'https://muze.serveo.net'
+const redirectUri = 'https://muze-player.herokuapp.com'
 const scopes = ['streaming', 'user-read-playback-state'];
 
 // If there is no token, redirect to Spotify authorization

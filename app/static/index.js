@@ -9,7 +9,7 @@
   * Plays Spotify song if included server's response
 */
 
-var socket = io.connect('http://localhost:5000');
+var socket = io.connect('https://muze-player.herokuapp.com');
 socket.on('connect', () => {
   socket.emit('start session');
 });
