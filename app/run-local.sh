@@ -1,8 +1,7 @@
 # Run app locally.
 
-echo "Running app in mode: $env"
 export GOOGLE_APPLICATIONS_CREDENTIALS=$MUZE_PATH_TO_CREDS
-export DIALOGFLOW_PROJECT_NAME=$MUZE_PROJECT_NAME
+export DIALOGFLOW_PROJECT_ID=$MUZE_PROJECT_ID
 
 # run in background
 echo "Opening ssh tunnel for port forwarding at muze.serveo.net"

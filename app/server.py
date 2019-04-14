@@ -26,7 +26,7 @@ socket_io = SocketIO(app)
 music_api = KnowledgeBaseAPI('knowledge_base/knowledge_base.db')
 
 DIALOGFLOW_CREDS = None
-DIALOGFLOW_PROJECT_NAME = None
+DIALOGFLOW_PROJECT_ID = None
 CLIENT_SESSION_KEYS, NEW_CLIENT_IDX, = [None for i in range(100)], 0
 CLIENT_COUNT, MAX_CLIENT_SESSIONS = 0, 100
 
@@ -186,7 +186,7 @@ def get_finegrained_recommendation(song, adjective):
 
 
 if __name__ == '__main__':
-    DIALOGFLOW_PROJECT_NAME = os.environ.get("DIALOGFLOW_PROJECT_NAME")
+    DIALOGFLOW_PROJECT_ID = os.environ.get("DIALOGFLOW_PROJECT_ID")
     # on Heroku, the port is an environment variable
     port = int(os.environ.get("PORT", 5000))
     dialogflow_key_file_raw_json = os.environ.get("DIALOGFLOW_KEY_FILE_RAW")
