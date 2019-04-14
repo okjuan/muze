@@ -1,5 +1,5 @@
 ## Overview
-This is an app for discovering and listening to music:
+The [Muze Player](http://muze-player.herokuapp.com/) is an app for discovering and listening to music. This is its source code repo.
 
 > Play No One by Alicia Keys
 
@@ -10,17 +10,18 @@ This is an app for discovering and listening to music:
 > Play something like No One but sadder
 
 The app integrates with:
-* Spotify's [Web Playback SDK](https://developer.spotify.com/documentation/web-playback-sdk/) for streaming music and [Web API](https://developer.spotify.com/documentation/web-api/) compiling music metadata
+* Spotify's [Web Playback SDK](https://developer.spotify.com/documentation/web-playback-sdk/) for streaming music and [Web API](https://developer.spotify.com/documentation/web-api/) for compiling music metadata
 * [Dialogflow](https://dialogflow.com/) to create a natural language user interface
 
 The app consists of:
-* A minimal web client that communicates user events to the server and streams music
+* A minimal web client that:
+    * streams music
+    * accepts raw text and voice input from the user
+    * communicates with the server via [web sockets](https://www.fullstackpython.com/websockets.html)
 * A server app that:
-    * handles user events from the client
-    * communicates with a Dialogflow agent to process raw natural language user input
-    * exposes a webhook endpoint for Dialogflow to call during [fulfillment](https://dialogflow.com/docs/fulfillment)
-    * contains a music knowledge API that exposes info about musical entities (songs, artists, genres, relationships therein) organized in a semantic network
-        * originally developed as part of an another [collaborative project](https://github.com/MIR-Directed-Research/intelligent-music-recommender).
+    * communicates with client via web sockets
+    * uses a Dialogflow agent to process raw natural language user input
+    * contains a music knowledge API that exposes info about musical entities (songs, artists, genres, relationships therein) that is internally organized using a semantic network
 
 ## Setup
 ### Prerequisites
@@ -35,26 +36,28 @@ pip install -r requirements.txt
 ```
 
 ## Music Knowledge API
-In general, the Knowledge Representation (KR) API exposes a collection of functions that encapsulate all SQL queries and logic relating to managing the database; through the KR API, callers may retrieve from and add information to the database. A detailed description is available in `design_docs/Music Knowledge Base Design Doc.pdf`.
+The Music Knowledge Representation (MKR) API exposes a collection of functions that encapsulate all SQL queries and logic relating to managing the database; through the MKR API, callers may retrieve/add information from/to the database. A detailed description is available in [`design_docs/Music Knowledge Base Design Doc.pdf`](https://github.com/okjuan/muze/blob/master/design_docs/Music%20Knowledge%20Base%20Design%20Doc.pdf). This component was originally developed as part of a [distinct, collaborative project](https://github.com/MIR-Directed-Research/intelligent-music-recommender).
 
 ## Testing
-### Demoing the Application
-This section contains brief instructions for running the app. It is necessary to make the Muze service **publicly available** so that it can communicate with the Dialogflow agent; [ngrok](https://ngrok.com/) is an easy way to relay HTTP messages between the locally running Muze service (e.g. on localhost) and a proxy server.
+### Running the App Locally
+Temporarily set the `redirectUri` in [`player.js`](https://github.com/okjuan/muze/blob/master/app/static/player.js) to `"https://muze.serveo.net"` and the socket connect URL in [`index.js`](https://github.com/okjuan/muze/blob/master/app/static/index.js) to `"https://localhost:5000"`. Then, from the project root directory, run the `run-local` script:
+```
+$ bash app/run-local.sh
+```
+
+The script assumes that the environment variables `$MUZE_PROJECT_ID` and `$MUZE_PATH_TO_CREDS` are set to the corresponding Dialogflow agent project ID and Google Cloud Platform API Key JSON (see [setup guide](https://dialogflow.com/docs/reference/v2-auth-setup)). [Serveo](https://serveo.net/) is used to make the local Muze service **publicly available** so that it can communicate with the Dialogflow agent.
 
 *NOTE*: A Spotify premium account is necessary to stream music.
 
-#### Local Set Up
-* Run the serverside app: `python app/server.py`
-* Run `./ngrok http 5000` to connect local server to relay server, making it publicly available
-* Copy HTTPS URL on the screen (e.g. `https://f313aea9.ngrok.io`)
-* In Dialogflow console, in Fulfillment tab, enable the Webhook option and paste the ngrok HTTPS url with `/webhook` appended to it (e.g. `https://f313aea9.ngrok.io/webhook`)
-* Make sure to get a fresh access token for [Spotify](https://developer.spotify.com/documentation/web-playback-sdk/quick-start/#authenticating-with-spotify), and paste them in `client/player.js`; this will be replaced with
+Try any of the following examples to play a song:
 
-#### Using the App
-* Navigate to `http://localhost:5000` and enter "Play No One by Alicia Keys".
-* The webpage should begin playing "No One" by Alicia Keys.
-* In addition to retrieving explicitly given songs, the app is capable of serving fine grained recommendations: enter "Play something like No One but more acoustic".
-* The webpage should beging playing "If I Ain't Got You" by Alicia Keys (or perhaps another song)
+> Play No One by Alicia Keys
+
+> Play something like No One but more acoustic
+
+> Play a song like No One but less popular
+
+> Play a song like No One but sadder
 
 ### Unit Tests
 Run the tests from the project's root folder:
