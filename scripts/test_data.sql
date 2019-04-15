@@ -2,17 +2,20 @@ INSERT INTO nodes (name, type, id) VALUES ("Justin Bieber", "artist", 1);
 INSERT INTO nodes (name, type, id) VALUES ("Justin Timberlake", "artist", 2);
 INSERT INTO nodes (name, type, id) VALUES ("U2", "artist", 3);
 INSERT INTO nodes (name, type, id) VALUES ("Shawn Mendes", "artist", 4);
+INSERT INTO nodes (name, type, id) VALUES ("The Anti Justin Bieber", "artist", 5);
 
 INSERT INTO artists (node_id, num_spotify_followers) VALUES (1, 4000);
 INSERT INTO artists (node_id, num_spotify_followers) VALUES (2, 3000);
 INSERT INTO artists (node_id, num_spotify_followers) VALUES (3, 2000);
 INSERT INTO artists (node_id, num_spotify_followers) VALUES (4, 1000);
+INSERT INTO artists (node_id, num_spotify_followers) VALUES (5, 0004);
 
 INSERT INTO nodes (name, type, id) VALUES ("Despacito", "song", 10);
 INSERT INTO nodes (name, type, id) VALUES ("Rock Your Body", "song", 11);
 INSERT INTO nodes (name, type, id) VALUES ("Beautiful Day", "song", 12);
 INSERT INTO nodes (name, type, id) VALUES ("In My Blood", "song", 13);
 INSERT INTO nodes (name, type, id) VALUES ("Sorry", "song", 14);
+INSERT INTO nodes (name, type, id) VALUES ("Sorry", "song", 15);
 
 INSERT INTO nodes (name, type, id) VALUES ("Pop", "genre", 20);
 INSERT INTO nodes (name, type, id) VALUES ("Super pop", "genre", 21);
@@ -26,6 +29,7 @@ INSERT INTO songs (main_artist_id, popularity, duration_ms, node_id, spotify_uri
 INSERT INTO songs (main_artist_id, popularity, duration_ms, node_id, spotify_uri, valence)
     VALUES (3, 60, 111111, 12, 'spotify:track:BeautifulDay', 1);
 INSERT INTO songs (main_artist_id, node_id) VALUES (4, 13);
+INSERT INTO songs (main_artist_id, node_id) VALUES (5, 15);
 
 -- * Define some edges for testing
 -- -------------------------------

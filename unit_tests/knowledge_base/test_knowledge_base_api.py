@@ -16,25 +16,26 @@ class TestMusicKnowledgeBaseAPI(unittest.TestCase):
 
     def test_get_song_data(self):
         song_data = self.kb_api.get_song_data("Despacito")
-        # we don't care what the node ID is
-        self.assertEqual(1, len(song_data), "Expected exactly one result from query for song 'Despacito'.")
-        self.assertEqual(
-            song_data[0],
-            dict(
-                id=10,
-                song_name="Despacito",
-                artist_name="Justin Bieber",
-                duration_ms=222222,
-                popularity=10,
-                valence=0.1,
-                spotify_uri='spotify:track:Despacito',
-                acousticness=None, danceability=None, energy=None,
-                instrumentalness=None, liveness=None, loudness=None,
-                speechiness=None, tempo=None, mode=None,
-                musical_key=None, time_signature=None,
-            ),
-            "Found expected values for song data for 'Despacito'."
+        expected_res = dict(
+            id=10, song_name="Despacito", artist_name="Justin Bieber",
+            duration_ms=222222, popularity=10, valence=0.1,
+            spotify_uri='spotify:track:Despacito',
+            acousticness=None, danceability=None, energy=None,
+            instrumentalness=None, liveness=None, loudness=None,
+            speechiness=None, tempo=None, mode=None,
+            musical_key=None, time_signature=None,
         )
+
+        self.assertEqual(1, len(song_data), "Expected exactly one result from query for song 'Despacito'.")
+        self.assertEqual(song_data[0], expected_res, "Found expected values for song data for 'Despacito'.")
+
+        song_data = self.kb_api.get_song_data(song_id=10)
+        self.assertEqual(1, len(song_data), "Expected exactly one result from query for song 'Despacito'.")
+        self.assertEqual(song_data[0], expected_res, "Found expected values for song data for 'Despacito'.")
+
+    def test_get_song_data_bad_params(self):
+        res = self.kb_api.get_song_data()
+        self.assertEqual(res, [], "Expect no results when both song name and ID are ommitted.")
 
     def test_get_song_data_case_insensitive(self):
         song_data = self.kb_api.get_song_data("dESpAcItO")
@@ -77,6 +78,47 @@ class TestMusicKnowledgeBaseAPI(unittest.TestCase):
             "Found expected values for song data for 'Beautiful Day'."
         )
 
+    def test_get_song_data_ambiguous_name(self):
+        res = self.kb_api.get_song_data("Sorry")
+
+        self.assertEqual(2, len(res), "Expected exactly two results.")
+        self.assertEqual(
+            set([14, 15]),
+            set([hit["id"] for hit in res]),
+            "Found unexpected IDs."
+        )
+
+        res = self.kb_api.get_song_data("Sorry", 14)
+        self.assertEqual(1, len(res), "Expected exactly one result.")
+        self.assertEqual(
+            res[0],
+            dict(
+                id=14, song_name="Sorry", artist_name="Justin Bieber",
+                popularity=20, duration_ms=333333,
+                valence=0.3, spotify_uri='spotify:track:Sorry',
+                acousticness=None, danceability=None, energy=None,
+                instrumentalness=None, liveness=None, loudness=None,
+                speechiness=None, tempo=None, mode=None,
+                musical_key=None, time_signature=None,
+            ),
+            "Unexpected result contents."
+        )
+
+        res = self.kb_api.get_song_data("Sorry", 15)
+        self.assertEqual(1, len(res), "Expected exactly one result.")
+        self.assertEqual(
+            res[0],
+            dict(
+                id=15, song_name="Sorry", artist_name="The Anti Justin Bieber",
+                duration_ms=None, popularity=None, spotify_uri=None,
+                acousticness=None, danceability=None, energy=None,
+                instrumentalness=None, liveness=None, loudness=None,
+                speechiness=None, valence=None, tempo=None, mode=None,
+                musical_key=None, time_signature=None,
+            ),
+            "Unexpected result contents."
+        )
+
     def test_get_song_data_dne(self):
         res = self.kb_api.get_song_data("Not In Database")
         self.assertEqual(res, [], "Expected empty list of results for queried song not in DB.")
@@ -101,16 +143,24 @@ class TestMusicKnowledgeBaseAPI(unittest.TestCase):
         self.assertEqual(set(res), expected_song_names, "Unexpected result from fetching all songs from db.")
 
     def test_get_all_artist_names(self):
-        expected_artist_names = set(["Justin Bieber", "Justin Timberlake", "U2", "Shawn Mendes"])
+        expected_artist_names = set(["Justin Bieber", "Justin Timberlake", "U2", "Shawn Mendes", "The Anti Justin Bieber"])
         res = self.kb_api.get_all_artist_names()
         self.assertEqual(set(res), expected_artist_names, "Unexpected result from fetching all artists from db.")
 
     def test_get_songs(self):
         res = self.kb_api.get_songs_by_artist("Justin Bieber")
-        self.assertEqual(res, ["Despacito", "Sorry"], "Songs retrieved for 'Justin Bieber' did not match expected.")
+        self.assertEqual(
+            res,
+            [dict(song_name="Despacito", id=10), dict(song_name="Sorry", id=14)],
+            "Songs retrieved for 'Justin Bieber' did not match expected.",
+        )
 
         res = self.kb_api.get_songs_by_artist("Justin Timberlake")
-        self.assertEqual(res, ["Rock Your Body"], "Songs retrieved for 'Justin Timberlake' did not match expected.")
+        self.assertEqual(
+            res,
+            [dict(song_name="Rock Your Body", id=11)],
+            "Songs retrieved for 'Justin Timberlake' did not match expected.",
+        )
 
     def test_get_songs_unknown_artist(self):
         res = self.kb_api.get_songs_by_artist("Unknown artist")
@@ -118,53 +168,53 @@ class TestMusicKnowledgeBaseAPI(unittest.TestCase):
 
     def test_songs_are_related_popularity(self):
         self.assertEqual(
-            self.kb_api.songs_are_related('Beautiful Day', 'Despacito', "less popular"),
+            self.kb_api.songs_are_related(12, 10, "less popular"),
             False,
             "'Beautiful Day' is MORE popular than 'Despacito'",
         )
 
         self.assertEqual(
-            self.kb_api.songs_are_related('Beautiful Day', 'Despacito', "more popular"),
+            self.kb_api.songs_are_related(12, 10, "more popular"),
             True,
             "'Beautiful Day' is MORE popular than 'Despacito'",
         )
 
     def test_songs_are_related_valence(self):
         self.assertEqual(
-            self.kb_api.songs_are_related('Beautiful Day', 'Despacito', "happier"),
+            self.kb_api.songs_are_related(12, 10, "happier"),
             True,
             "'Beautiful Day' is MORE happy than 'Despacito'",
         )
 
         self.assertEqual(
-            self.kb_api.songs_are_related('Beautiful Day', 'Despacito', "sadder"),
+            self.kb_api.songs_are_related(12, 10, "sadder"),
             False,
             "'Beautiful Day' is MORE happy than 'Despacito'",
         )
 
     def test_songs_are_related_same_song(self):
         self.assertEqual(
-            self.kb_api.songs_are_related('Beautiful Day', 'Beautiful Day', "more popular"),
+            self.kb_api.songs_are_related(12, 12, "more popular"),
             False,
             "'Beautiful Day' cannot be more popular than itself.",
         )
 
         self.assertEqual(
-            self.kb_api.songs_are_related('Beautiful Day', 'Beautiful Day', "more popular"),
+            self.kb_api.songs_are_related(12, 12, "more popular"),
             False,
             "'Beautiful Day' cannot be more popular than itself.",
         )
 
     def test_songs_are_related_unknown_relationship(self):
         self.assertEqual(
-            self.kb_api.songs_are_related('Beautiful Day', 'Despacito', 'more something'),
+            self.kb_api.songs_are_related(12, 10, 'more something'),
             False,
             "Expected return value False when relationship is invalid.",
         )
 
     def test_songs_are_related_value_missing(self):
         self.assertEqual(
-            self.kb_api.songs_are_related('Beautiful Day', 'Despacito', 'dancier'),
+            self.kb_api.songs_are_related(12, 10, 'dancier'),
             False,
             "Expected return value False when DB does not contain value for given (valid) relationship.",
         )

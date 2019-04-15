@@ -51,56 +51,49 @@ class TestServer(unittest.TestCase):
         self.assertEqual(msg[:13], "Unfortunately", "Expected no song to be found.")
         self.assertEqual(spotify_uri, None, "Expected no Spotify URI")
 
-    def test_get_finegrained_recommendation_more_acoustic(self):
+    def test_get_finegrained_recommendation(self):
         with self.test_app.app_context():
             msg, spotify_uri = endpoint.get_finegrained_recommendation("thank u, next", "more acoustic")
 
         self.assertEqual(msg[:5], "Found", "Expected to find a song.")
         self.assertEqual(spotify_uri[:14], "spotify:track:", "Expected to receive Spotify URI")
 
-    def test_get_finegrained_recommendation_less_acoustic(self):
         with self.test_app.app_context():
             msg, spotify_uri = endpoint.get_finegrained_recommendation("7 rings", "less acoustic")
 
         self.assertEqual(msg[:5], "Found", "Expected to find a song.")
         self.assertEqual(spotify_uri[:14], "spotify:track:", "Expected to receive Spotify URI")
 
-    def test_get_finegrained_recommendation_happier(self):
         with self.test_app.app_context():
             msg, spotify_uri = endpoint.get_finegrained_recommendation("7 rings", "happier")
 
         self.assertEqual(msg[:5], "Found", "Expected to find a song.")
         self.assertEqual(spotify_uri[:14], "spotify:track:", "Expected to receive Spotify URI")
 
-    def test_get_finegrained_recommendation_sadder(self):
         with self.test_app.app_context():
             msg, spotify_uri = endpoint.get_finegrained_recommendation("7 rings", "sadder")
 
         self.assertEqual(msg[:5], "Found", "Expected to find a song.")
         self.assertEqual(spotify_uri[:14], "spotify:track:", "Expected to receive Spotify URI")
 
-    def test_get_finegrained_recommendation_dancier(self):
         with self.test_app.app_context():
             msg, spotify_uri = endpoint.get_finegrained_recommendation("7 rings", "dancier")
 
         self.assertEqual(msg[:5], "Found", "Expected to find a song.")
         self.assertEqual(spotify_uri[:14], "spotify:track:", "Expected to receive Spotify URI")
 
-    def test_get_finegrained_recommendation_less_dancey(self):
         with self.test_app.app_context():
             msg, spotify_uri = endpoint.get_finegrained_recommendation("7 rings", "less dancey")
 
         self.assertEqual(msg[:5], "Found", "Expected to find a song.")
         self.assertEqual(spotify_uri[:14], "spotify:track:", "Expected to receive Spotify URI")
 
-    def test_get_finegrained_recommendation_less_acoustic_related_artist(self):
         with self.test_app.app_context():
             msg, spotify_uri = endpoint.get_finegrained_recommendation("bad idea", "less acoustic")
 
         self.assertEqual(msg[:5], "Found", "Expected to find a song.")
         self.assertEqual(spotify_uri[:14], "spotify:track:", "Expected to receive Spotify URI")
 
-    def test_get_finegrained_recommendation_more_popular(self):
         with self.test_app.app_context():
             msg, spotify_uri = endpoint.get_finegrained_recommendation("bad idea", "more popular")
 

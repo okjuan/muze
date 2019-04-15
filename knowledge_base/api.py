@@ -91,7 +91,7 @@ class KnowledgeBaseAPI:
         conn.execute("PRAGMA foreign_keys = 1")
         return conn
 
-    def songs_are_related(self, song1, song2, rel_str):
+    def songs_are_related(self, song1_id, song2_id, rel_str):
         """Determines whether any two given songs are related in the way described.
 
         E.g. Determines whether 'thank u, next' is 'more acoustic' than 'bad idea'.
@@ -100,8 +100,8 @@ class KnowledgeBaseAPI:
         NOTE: order of params matters.
 
         Params:
-            song1 (string): song name (e.g. "thank u, next").
-            song2 (string): song name (e.g. "thank u, next").
+            song1_id (int): ID of song's node in semantic network.
+            song2_id (int): ID of song's node in semantic network.
 
         Returns:
             (bool): True iff the two given songs are related in the way described.
@@ -120,29 +120,24 @@ class KnowledgeBaseAPI:
             print(f"ERROR: could not find feature name for relationship: '{rel_str}'")
             return False
 
-        song1_data = self.get_song_data(song1)
-        song2_data = self.get_song_data(song2)
+        song1_data = self.get_song_data(song_id=song1_id)
+        song2_data = self.get_song_data(song_id=song2_id)
 
         if len(song1_data) == 0:
-            print(f"ERROR: Could not find song {song1}")
+            print(f"ERROR: Could not find song with id={song1_id}")
             return False
         if len(song2_data) == 0:
-            print(f"ERROR: Could not find song {song2}")
+            print(f"ERROR: Could not find song with id={song2_id}")
             return False
-
-        if len(song1_data) > 1:
-            print(f"WARN: Found multiple hits for song: '{song1}'. Picking one arbitrarily.")
-        if len(song2_data) > 1:
-            print(f"WARN: Found multiple hits for song: '{song2}'. Picking one arbitrarily.")
 
         song1_val = song1_data[0].get(feature_name)
         song2_val = song2_data[0].get(feature_name)
 
         if song1_val is None:
-            print(f"ERROR: could not find '{feature_name}' value for song '{song1}'")
+            print(f"ERROR: could not find '{feature_name}' value for song with id={song1_id}")
             return False
         if song2_val is None:
-            print(f"ERROR: could not find '{feature_name}' value for song '{song2}'")
+            print(f"ERROR: could not find '{feature_name}' value for song '{song2_id}'")
             return False
         return compare_func(song1_val, song2_val)
 
@@ -210,11 +205,15 @@ class KnowledgeBaseAPI:
             print("ERROR: Could not retrieve songs: {}".format(str(e)))
         return []
 
-    def get_song_data(self, song_name):
+    def get_song_data(self, song_name=None, song_id=None):
         """Gets all songs that match given name, along with their artists.
 
+        Params:
+            song_name (str): optional only if song_id is provided e.g. "thank u, next".
+            song_id (int): ID of song in semantic network; optional only if song_id is provided.
+
         Returns:
-            (list of dicts): each dict contains song_name and artist_name keys. Empty if not matches found.
+            (list of dicts): each dict contains song_name and artist_name keys. Empty if not matches found or error.
                 e.g. [
                     {
                         id: 1,
@@ -241,6 +240,12 @@ class KnowledgeBaseAPI:
                     ...
                 ]
         """
+        if song_name is None and song_id is None:
+            print("ERROR: Require one of song name and song ID to retrieve song data.")
+            return []
+        elif song_name is None:
+            song_name = "%" # match any string
+
         try:
             # Auto-close.
             with closing(self.connection) as con:
@@ -270,6 +275,7 @@ class KnowledgeBaseAPI:
                                 speechiness=x[12], valence=x[13], tempo=x[14], mode=x[15],
                                 musical_key=x[16], time_signature=x[17],
                             ) for x in cursor.fetchall()
+                            if song_id is None or song_id == x[4]
                         ]
 
         except sqlite3.OperationalError as e:
@@ -350,8 +356,9 @@ class KnowledgeBaseAPI:
             artist (string): e.g. "Justin Bieber"
 
         Returns:
-            (list of strings): song names by given artist. None if artist is ambiguous or not found.
-                e.g. ["Despacito", "Sorry"]
+            (list of dicts): containing song names and semantic network IDs by given artist.
+                None if artist is ambiguous or not found.
+                e.g. [{"name": "Despacito", "id": 1}, {"name": "Sorry", "id":2}]
         """
         matching_artist_node_ids = self._get_matching_node_ids(artist)
         if len(matching_artist_node_ids) == 0:
@@ -368,7 +375,7 @@ class KnowledgeBaseAPI:
                 with con:
                     with closing(con.cursor()) as cursor:
                         cursor.execute("""
-                            SELECT name
+                            SELECT name, node_id
                             FROM (
                                 SELECT songs.node_id as node_id
                                 FROM songs JOIN artists ON main_artist_id = artists.node_id
@@ -377,7 +384,7 @@ class KnowledgeBaseAPI:
                         """, (artist_node_id,))
 
                         # unpack tuples e.g. [("Despacito",)] => ["Despacito"]
-                        return [x[0] for x in cursor.fetchall()]
+                        return [dict(song_name=x[0], id=x[1]) for x in cursor.fetchall()]
 
         except sqlite3.OperationalError as e:
             print("ERROR: failed to find songs for artist '{0}'".format(
