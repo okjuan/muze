@@ -99,12 +99,3 @@ class TestServer(unittest.TestCase):
 
         self.assertEqual(msg[:5], "Found", "Expected to find a song.")
         self.assertEqual(spotify_uri[:14], "spotify:track:", "Expected to receive Spotify URI")
-
-    # Regression test: this request would result in 'Say My Name' by 'David Guetta' being returned
-    def test_get_finegrained_recommendation_ambiguous_song_name(self):
-        with self.test_app.app_context():
-            msg, spotify_uri = endpoint.get_finegrained_recommendation("You Will Find Me", "less acoustic")
-
-        self.assertEqual(msg[:19], "Found 'Say My Name'", "Expected to find a song.")
-        self.assertEqual(msg[-13:], "Alex & Sierra", "Expected to find a song.")
-        self.assertEqual(spotify_uri[:14], "spotify:track:", "Expected to receive Spotify URI")

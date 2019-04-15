@@ -179,16 +179,12 @@ def get_finegrained_recommendation(song, adjective, artist=None):
     cur_artist = cur_song_data['artist_name']
     cur_song_id = cur_song_data["id"]
 
-    # First, try to find song by same artist
-    for candidate_song in music_api.get_songs_by_artist(cur_artist):
-        if music_api.songs_are_related(candidate_song["id"], cur_song_id, rel_str=adjective):
-            song_data = music_api.get_song_data(candidate_song["song_name"], candidate_song["id"])
-            spotify_uri = song_data[0]['spotify_uri']
-            return f"Found '{candidate_song['song_name']}' by {cur_artist}", spotify_uri
-
-    # Otherwise, look for a song by another artist
-    for related_artist in music_api.get_related_entities(cur_artist):
-        for candidate_song in music_api.get_songs_by_artist(related_artist):
+    rel_artists = music_api.get_related_entities(cur_artist) + [cur_artist]
+    random.shuffle(rel_artists)
+    for related_artist in rel_artists:
+        songs_by_rel_artist = music_api.get_songs_by_artist(related_artist)
+        random.shuffle(songs_by_rel_artist)
+        for candidate_song in songs_by_rel_artist:
             if music_api.songs_are_related(candidate_song["id"], cur_song_id, rel_str=adjective):
                 song_data = music_api.get_song_data(candidate_song["song_name"], candidate_song["id"])
                 spotify_uri = song_data[0]['spotify_uri']
