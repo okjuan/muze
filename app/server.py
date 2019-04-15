@@ -98,6 +98,9 @@ def handle_user_query(data):
     elif resp.query_result.intent.display_name == "Find Slightly Different Song":
         msg_to_user, spotify_uri = get_finegrained_recommendation(params["song"], params["audio_feature_adjective"])
 
+    else:
+        msg_to_user = "Hmm, could you phrase that a little differently?"
+
     if spotify_uri is not None:
         print("Found song to play!")
         socket_io.emit(
