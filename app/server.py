@@ -144,7 +144,7 @@ def find_song(song, artist):
             spotify_uri = hits[0]['spotify_uri']
             return f"Found '{song}' by {cur_artist}", spotify_uri
 
-def get_finegrained_recommendation(song, adjective):
+def get_finegrained_recommendation(song, adjective, artist=None):
     """
 
     Params:
@@ -162,26 +162,37 @@ def get_finegrained_recommendation(song, adjective):
     elif adjective is None or len(adjective) == 0:
         return "Unfortunately, I could not understand that phrase. Please try again.", None
 
-    hits = music_api.get_song_data(song)
+    hits = [
+        hit for hit in music_api.get_song_data(song)
+        if artist is None or hit["artist_name"].upper() == artist.upper()
+    ]
     if len(hits) == 0:
-        return f"Unfortunately, I could not find song '{song}'.", None
+        msg = f"Unfortunately, I could not find song '{song}'"
+        if artist is None:
+            return msg + ".", None
+        else:
+            return f"{msg} by '{artist}'", None
+
     elif len(hits) > 1:
         print(f"WARN: Found {len(hits)} hits for song '{song}'. Choosing one arbitrarily.")
     cur_song_data = hits[0]
     cur_artist = cur_song_data['artist_name']
+    cur_song_id = cur_song_data["id"]
 
     # First, try to find song by same artist
     for candidate_song in music_api.get_songs_by_artist(cur_artist):
-        if music_api.songs_are_related(candidate_song, song, rel_str=adjective):
-            spotify_uri = music_api.get_song_data(candidate_song)[0]['spotify_uri']
-            return f"Found '{candidate_song}' by {cur_artist}", spotify_uri
+        if music_api.songs_are_related(candidate_song["id"], cur_song_id, rel_str=adjective):
+            song_data = music_api.get_song_data(candidate_song["song_name"], candidate_song["id"])
+            spotify_uri = song_data[0]['spotify_uri']
+            return f"Found '{candidate_song['song_name']}' by {cur_artist}", spotify_uri
 
     # Otherwise, look for a song by another artist
     for related_artist in music_api.get_related_entities(cur_artist):
         for candidate_song in music_api.get_songs_by_artist(related_artist):
-            if music_api.songs_are_related(candidate_song, song, rel_str=adjective):
-                spotify_uri = music_api.get_song_data(candidate_song)[0]['spotify_uri']
-                return f"Found '{candidate_song}' by {related_artist}", spotify_uri
+            if music_api.songs_are_related(candidate_song["id"], cur_song_id, rel_str=adjective):
+                song_data = music_api.get_song_data(candidate_song["song_name"], candidate_song["id"])
+                spotify_uri = song_data[0]['spotify_uri']
+                return f"Found '{candidate_song['song_name']}' by {related_artist}", spotify_uri
     return f"Unfortunately, I could not find a song '{adjective}' than '{song}'.", None
 
 
