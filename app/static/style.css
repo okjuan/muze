@@ -2,10 +2,18 @@
   text-align: center;
 }
 
+#main-content {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  -webkit-transform: translate(-50%, -50%);
+  width: 80%;
+}
+
 #query-input {
   margin: 0 auto;
   display: inline-block;
-  width: 50%
+  width: 40%
 }
 
 #query-response {
