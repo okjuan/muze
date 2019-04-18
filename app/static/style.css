@@ -1,68 +1,19 @@
-body {
-  background-color: #192837;
-  font-family: "Titillium Web", Arial, sans-serif;
-  font-size: 20px;
-  margin: 0;
-}
 .container {
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  -webkit-transform: translate(-50%, -50%);
-}
-
-input {
-  background-color: #126077;
-  border: 1px solid #3F7F93;
-  color: #A6CAE6;
-  font-family: "Titillium Web";
-  font-size: 20px;
-  line-height: 43px;
-  padding: 0 0.75em;
-  width: 400px;
-  -webkit-transition: all 0.35s ease-in;
-}
-
-input:active, input:focus, textarea:active, textarea:focus {
-  outline: 1px solid #48788B;
-}
-
-.btn {
-  background-color: #126178;
-  border: 1px solid #549EAF;
-  color: #549EAF;
-  cursor: pointer;
-  display: inline-block;
-  font-family: "Titillium Web";
-  font-size: 20px;
-  line-height: 43px;
-  padding: 0 0.75em;
   text-align: center;
-  text-transform: uppercase;
-  -webkit-transition: all 0.35s ease-in;
 }
 
-.btn:hover {
-  background-color: #1888A9;
-  color: #183035;
+#query-input {
+  margin: 0 auto;
+  display: inline-block;
+  width: 50%
 }
-.spoken-response {
-  max-height: 0;
-  max-width: 400px;
-  overflow: hidden;
-  -webkit-transition: all 0.35s ease-in;
-}
-.spoken-response.is-active {
+
+#query-response {
+  text-align: center;
+  margin: 0 auto;
+  max-width: 30%;
   max-height: 400px;
-}
-.spoken-response__text {
-  background-color: #040E23;
-  color: #7584A2;
-  padding: 1em;
-}
-
-#title {
-  color: white;
+  -webkit-transition: all 0.35s ease-in;
 }
 
 #spotify-logo {
@@ -72,20 +23,20 @@ input:active, input:focus, textarea:active, textarea:focus {
   text-align: center;
 }
 
-.img-container {
-  text-align: center;
+#branding-container {
+  /* Override Spectre */
+  box-sizing: content-box;
+}
+
+#music-metadata-container {
+  /* initially hidden */
+  display: none;
+
+  border: none;
+  width: 50%;
+  margin: 0 auto;
 }
 
 #album-art {
-  display: none;
-  padding: 30px;
-}
-
-#album-art-link {
-  display: none;
-}
-
-#track-metadata {
-  display: none;
-  color: white;
+  padding: 20px;
 }

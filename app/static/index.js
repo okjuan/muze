@@ -19,17 +19,17 @@ socket.on('session key', (data) => {
 });
 
 socket.on('play song', (data) => {
-  respond(data['msg']);
+  respond(data['msg'], 'success');
   playSong(data['spotify_uri']);
   updateInputPlaceholder();
 });
 
 socket.on('message', (data) => {
-  respond(data['msg']);
+  respond(data['msg'], 'warn');
 });
 
 var sessionKey,
-  $speechInput,
+  $queryInput,
   $recBtn,
   recognition,
   messageRecording = "Recording...",
@@ -50,13 +50,13 @@ var sessionKey,
   placeholderIdx = 0;
 
 $(document).ready(function() {
-  $speechInput = $("#speech");
+  $queryInput = $("#query-input");
   $recBtn = $("#rec");
 
-  $speechInput.keypress(function(event) {
+  $queryInput.keypress(function(event) {
     if (event.which == 13) {
       event.preventDefault();
-      send($speechInput.val());
+      send($queryInput.val());
     }
   });
   $recBtn.on("click", function(event) {
@@ -88,7 +88,7 @@ function startRecognition() {
     stopRecognition();
   };
   recognition.onend = function() {
-    respond(messageCouldntHear);
+    respond(messageCouldntHear, 'error');
     stopRecognition();
   };
   recognition.lang = "en-US";
@@ -112,12 +112,22 @@ function switchRecognition() {
 }
 
 function setInput(text) {
-  $speechInput.val(text);
-  send($speechInput.val());
+  $queryInput.val(text);
+  send($queryInput.val());
 }
 
 function updateRec() {
-  $recBtn.text(recognition ? "Stop" : "Speak");
+  let icon = $recBtn.find('i');
+  if (recognition) {
+    $recBtn.removeClass('btn-primary');
+    icon.removeClass('icon-message');
+    icon.addClass('icon-stop');
+
+  } else {
+    $recBtn.addClass('btn-primary');
+    icon.removeClass('icon-stop');
+    icon.addClass('icon-message');
+  }
 }
 
 function send(userQuery) {
@@ -127,9 +137,10 @@ function send(userQuery) {
   );
 }
 
-function respond(val) {
+function respond(val, msgType) {
   if (val == "") {
     val = messageSorry;
+    msgType = "error";
   }
 
   if (val !== messageRecording) {
@@ -140,10 +151,28 @@ function respond(val) {
     window.speechSynthesis.speak(msg);
   }
 
-  $("#spokenResponse").addClass("is-active").find(".spoken-response__text").html(val);
+  $('#query-response').remove();
+
+  let elemClass = 'toast-primary';
+  if (msgType === "success") {
+    elemClass = 'toast-success';
+
+  } else if (msgType === "warn") {
+    elemClass = 'toast-warning';
+
+  } else if (msgType === "error") {
+    elemClass = 'toast-error';
+  }
+
+  $('<div/>', {
+    id: 'query-response',
+    class: 'toast ' + elemClass,
+    css: 'display: block',
+    html: val
+  }).prependTo('body');
 }
 
 function updateInputPlaceholder() {
   placeholderIdx = (placeholderIdx + 1) % placeholders.length;
-  $('#speech').attr('placeholder', placeholders[placeholderIdx]);
+  $queryInput.attr('placeholder', placeholders[placeholderIdx]);
 }
