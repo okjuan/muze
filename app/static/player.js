@@ -144,8 +144,6 @@ const updateTrackInfo = (songName, artistName, albumName) => {
 const updateAlbumArt = (albumArtUrl, songLink) => {
     let albumArtElem = $('#album-art');
     albumArtElem.attr('src', albumArtUrl);
-    albumArtElem.attr('height', '200px');
-    albumArtElem.attr('width', '200px');
 
     let songLinkElem = $('#album-art-link');
     songLinkElem.attr('href', songLink);

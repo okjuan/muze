@@ -1,3 +1,7 @@
+body {
+  box-sizing: content-box;
+}
+
 .container {
   text-align: center;
 }
@@ -13,21 +17,37 @@
 #query-input {
   margin: 0 auto;
   display: inline-block;
-  width: 40%
+  width: 40%;
+  min-width: 50vw;
 }
 
 #query-response {
   text-align: center;
+  overflow: hidden;
   margin: 0 auto;
+
+  min-width: 200px;
   max-width: 30%;
-  max-height: 400px;
-  -webkit-transition: all 0.35s ease-in;
+  min-height: 10px;
+  max-height: 6vh;
+
+  padding: 2px;
+  box-sizing: border-box;
+
+  -webkit-transition: all 1.0s ease-in;
 }
 
 #spotify-logo {
-  height: 71px;
-  width: 230px;
-  padding: 35px;
+  display: none;
+}
+
+#spotify-icon {
+  box-sizing: content-box;
+  min-width: 21px;
+  min-height: 21px;
+  height: 10vmin;
+  width: 10vmin;
+  padding: 5vmin;
   text-align: center;
 }
 
@@ -46,5 +66,28 @@
 }
 
 #album-art {
-  padding: 20px;
+  padding: 5vmin;
+  height: 30vmin;
+  width: 30vmin;
+}
+
+.track-metadata {
+  max-height: 6vmin;
+}
+
+@media only screen and (min-width: 600px) {
+
+  #spotify-icon {
+    display: none;
+  }
+
+  #spotify-logo {
+    box-sizing: content-box;
+    display: inline-block;
+    min-height: 71px;
+    min-width: 230px;
+    max-width: 10vmin;
+    padding: 35px;
+    text-align: center;
+  }
 }

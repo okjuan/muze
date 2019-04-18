@@ -15,6 +15,8 @@
 <head>
   <title>Muze Client</title>
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
   <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='style.css') }}" />
 
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
@@ -47,12 +49,13 @@
               </a>
             </div>
 
-            <div class="chip" id="track-name">Song Name</div>
-            <div class="chip" id="artist-name">Artist Name</div>
-            <div class="chip" id="album-name">Album Name</div>
+            <div class="chip track-metadata" id="track-name">Song Name</div>
+            <div class="chip track-metadata" id="artist-name">Artist Name</div>
+            <div class="chip track-metadata" id="album-name">Album Name</div>
 
             <div id="branding-container">
               <img id="spotify-logo" src="{{ url_for('static', filename='imgs/Spotify_Logo_RGB_Black.png') }}" />
+              <img id="spotify-icon" src="{{ url_for('static', filename='imgs/Spotify_Icon_RGB_Black.png') }}" />
             </div>
 
           </div>
