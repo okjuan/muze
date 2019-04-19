@@ -19,13 +19,13 @@ socket.on('session key', (data) => {
 });
 
 socket.on('play song', (data) => {
-  respond(data['msg'], 'success');
+  respond('Aha!', data['msg'], 'success');
   playSong(data['spotify_uri']);
   updateInputPlaceholder();
 });
 
 socket.on('message', (data) => {
-  respond(data['msg'], 'warn');
+  respond('Whoops!', data['msg'], 'warn');
 });
 
 var sessionKey,
@@ -74,7 +74,7 @@ function startRecognition() {
   recognition.interimResults = false;
 
   recognition.onstart = function(event) {
-    respond(messageRecording);
+    respond(messageRecording, '');
     updateRec();
   };
   recognition.onresult = function(event) {
@@ -137,18 +137,18 @@ function send(userQuery) {
   );
 }
 
-function respond(val, msgType) {
-  if (val == "") {
-    val = messageSorry;
+function respond(title, msg, msgType) {
+  if (msg == "") {
+    msg = messageSorry;
     msgType = "error";
   }
 
-  if (val !== messageRecording) {
-    var msg = new SpeechSynthesisUtterance();
-    msg.voiceURI = "native";
-    msg.text = val;
-    msg.lang = "en-US";
-    window.speechSynthesis.speak(msg);
+  if (msg !== messageRecording) {
+    var voiceMsg = new SpeechSynthesisUtterance();
+    voiceMsg.voiceURI = "native";
+    voiceMsg.text = msg;
+    voiceMsg.lang = "en-US";
+    window.speechSynthesis.speak(voiceMsg);
   }
 
   $('#query-response').remove();
@@ -168,8 +168,19 @@ function respond(val, msgType) {
     id: 'query-response',
     class: 'toast ' + elemClass,
     css: 'display: block',
-    html: val
   }).prependTo('body');
+
+  let toastElem = $('#query-response');
+  // TODO: make them appear on same line
+  $('<h6/>', {
+    id: 'query-response-title',
+    html: title,
+    css: 'display: inline-block',
+  }).appendTo(toastElem);
+  $('<p/>', {
+    id: 'query-response-msg',
+    html: msg,
+  }).appendTo(toastElem);
 }
 
 function updateInputPlaceholder() {

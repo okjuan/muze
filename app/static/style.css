@@ -29,12 +29,21 @@ body {
   min-width: 200px;
   max-width: 30%;
   min-height: 10px;
-  max-height: 6vh;
+  max-height: 4vh;
 
   padding: 2px;
-  box-sizing: border-box;
+  box-sizing: content-box;
 
   -webkit-transition: all 1.0s ease-in;
+}
+
+#query-response-title {
+  display: inline-block;
+  padding: 5px;
+}
+
+#query-response-msg {
+  display: none;
 }
 
 #spotify-logo {
@@ -75,6 +84,30 @@ body {
   max-height: 6vmin;
 }
 
+#track-name {
+  /* Put here instead of .track-metadata to override Spectre's Toast max-width */
+  max-width: 35vmin;
+}
+
+#album-name {
+  /* Put here instead of .track-metadata to override Spectre's Toast max-width */
+  max-width: 35vmin;
+}
+
+#artist-name {
+  /* Put here instead of .track-metadata to override Spectre's Toast max-width */
+  max-width: 35vmin;
+}
+
+/* Only display full query response message if there's enough space */
+@media only screen and (min-width: 100px) {
+  #query-response-msg {
+    display: inline-block;
+    padding: 5px;
+  }
+}
+
+/* Only display full Spotify Logo if there's enough space */
 @media only screen and (min-width: 600px) {
 
   #spotify-icon {
