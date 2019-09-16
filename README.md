@@ -16,14 +16,8 @@ The app integrates with:
 * [Dialogflow](https://dialogflow.com/) to create a natural language user interface
 
 The app consists of:
-* A minimal web client that:
-    * streams music
-    * accepts raw text and voice input from the user
-    * communicates with the server via [web sockets](https://www.fullstackpython.com/websockets.html)
-* A server app that:
-    * communicates with client via web sockets
-    * uses a Dialogflow agent to process raw natural language user input
-    * contains a music knowledge API that exposes info about musical entities (songs, artists, genres, relationships therein) that is internally organized using a semantic network
+* A minimal web client that streams music, accepts raw text and voice input from the user, and communicates with the server via [web sockets](https://www.fullstackpython.com/websockets.html).
+* A server app that communicates with client via web sockets, uses a Dialogflow agent to process raw natural language user input, and contains a music knowledge API that exposes info about musical entities (songs, artists, genres, relationships therein) that is internally organized using a semantic network.
 
 ## Setup
 ### Prerequisites
