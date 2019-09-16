@@ -1,91 +1,124 @@
 body {
-  background-color: #192837;
-  font-family: "Titillium Web", Arial, sans-serif;
-  font-size: 20px;
-  margin: 0;
+  box-sizing: content-box;
 }
+
 .container {
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  -webkit-transform: translate(-50%, -50%);
-}
-
-input {
-  background-color: #126077;
-  border: 1px solid #3F7F93;
-  color: #A6CAE6;
-  font-family: "Titillium Web";
-  font-size: 20px;
-  line-height: 43px;
-  padding: 0 0.75em;
-  width: 400px;
-  -webkit-transition: all 0.35s ease-in;
-}
-
-input:active, input:focus, textarea:active, textarea:focus {
-  outline: 1px solid #48788B;
-}
-
-.btn {
-  background-color: #126178;
-  border: 1px solid #549EAF;
-  color: #549EAF;
-  cursor: pointer;
-  display: inline-block;
-  font-family: "Titillium Web";
-  font-size: 20px;
-  line-height: 43px;
-  padding: 0 0.75em;
   text-align: center;
-  text-transform: uppercase;
-  -webkit-transition: all 0.35s ease-in;
 }
 
-.btn:hover {
-  background-color: #1888A9;
-  color: #183035;
+#main-content {
+  position: fixed;
+  margin: 10vh auto;
+  width: 80%;
 }
-.spoken-response {
-  max-height: 0;
-  max-width: 400px;
+
+#query-input {
+  margin: 0 auto;
+  display: inline-block;
+  width: 40%;
+  min-width: 50vw;
+}
+
+#query-response {
+  text-align: center;
   overflow: hidden;
-  -webkit-transition: all 0.35s ease-in;
-}
-.spoken-response.is-active {
-  max-height: 400px;
-}
-.spoken-response__text {
-  background-color: #040E23;
-  color: #7584A2;
-  padding: 1em;
+  margin: 0 auto;
+
+  min-width: 200px;
+  max-width: 30%;
+  min-height: 10px;
+  max-height: 4vh;
+
+  padding: 2px;
+  box-sizing: content-box;
+
+  -webkit-transition: all 1.0s ease-in;
 }
 
-#title {
-  color: white;
+#query-response-title {
+  display: inline-block;
+  padding: 5px;
+}
+
+#query-response-msg {
+  display: none;
 }
 
 #spotify-logo {
-  height: 71px;
-  width: 230px;
-  padding: 35px;
+  display: none;
+}
+
+#spotify-icon {
+  box-sizing: content-box;
+  min-width: 21px;
+  min-height: 21px;
+  height: 10vmin;
+  width: 10vmin;
+  padding: 5vmin;
   text-align: center;
 }
 
-.img-container {
-  text-align: center;
+#branding-container {
+  /* Override Spectre */
+  box-sizing: content-box;
+}
+
+#music-metadata-container {
+  /* initially hidden */
+  display: none;
+
+  border: none;
+  width: 50%;
+  margin: 0 auto;
 }
 
 #album-art {
-  display: none;
-  padding: 30px;
+  padding: 5vmin;
+  height: 30vmin;
+  width: 30vmin;
 }
 
-#album-art-link {
-  display: none;
+.track-metadata {
+  max-height: 6vmin;
 }
 
-#track-metadata {
-  display: none;
-  color: white;
+#track-name {
+  /* Put here instead of .track-metadata to override Spectre's Toast max-width */
+  max-width: 35vmin;
+}
+
+#album-name {
+  /* Put here instead of .track-metadata to override Spectre's Toast max-width */
+  max-width: 35vmin;
+}
+
+#artist-name {
+  /* Put here instead of .track-metadata to override Spectre's Toast max-width */
+  max-width: 35vmin;
+}
+
+/* Only display full query response message if there's enough space */
+@media only screen and (min-width: 100px) {
+  #query-response-msg {
+    display: inline-block;
+    padding: 5px;
+  }
+}
+
+/* Only display full Spotify Logo if there's enough space */
+@media only screen and (min-width: 600px) {
+
+  #spotify-icon {
+    display: none;
+  }
+
+  #spotify-logo {
+    box-sizing: content-box;
+    display: inline-block;
+    min-height: 71px;
+    min-width: 230px;
+    max-width: 10vmin;
+    padding: 35px;
+    text-align: center;
+  }
 }

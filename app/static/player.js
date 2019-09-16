@@ -78,6 +78,7 @@ window.onSpotifyWebPlaybackSDKReady = () => {
                 current_track['artists'][0]['name'],
                 current_track['album']['name']
             );
+            showSongMetadataElem();
             mostRecentTrackUri = current_track['uri'];
         }
     });
@@ -130,19 +131,24 @@ const playSong = (spotify_uri) => {
 }
 
 const updateTrackInfo = (songName, artistName, albumName) => {
-    let elem = $("#track-metadata");
-    elem.text(`${songName} by ${artistName} from ${albumName}`);
-    elem.css('display', 'block');
+    let elem = $("#track-name");
+    elem.text(`${songName}`);
+
+    elem = $("#artist-name");
+    elem.text(`${artistName}`);
+
+    elem = $("#album-name");
+    elem.text(`${albumName}`);
 }
 
 const updateAlbumArt = (albumArtUrl, songLink) => {
     let albumArtElem = $('#album-art');
     albumArtElem.attr('src', albumArtUrl);
-    albumArtElem.attr('height', '200px');
-    albumArtElem.attr('width', '200px');
-    albumArtElem.css('display', 'inline-block');
 
     let songLinkElem = $('#album-art-link');
     songLinkElem.attr('href', songLink);
-    songLinkElem.css('display', 'block');
+}
+
+const showSongMetadataElem = () => {
+    $('#music-metadata-container').css('display', 'block');
 }
