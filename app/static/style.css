@@ -12,36 +12,10 @@ body {
   width: 80%;
 }
 
-#query-input {
+#random-song {
   margin: 0 auto;
   display: inline-block;
   width: 40%;
-  min-width: 50vw;
-}
-
-#query-response {
-  text-align: center;
-  overflow: hidden;
-  margin: 0 auto;
-
-  min-width: 200px;
-  max-width: 30%;
-  min-height: 10px;
-  max-height: 4vh;
-
-  padding: 2px;
-  box-sizing: content-box;
-
-  -webkit-transition: all 1.0s ease-in;
-}
-
-#query-response-title {
-  display: inline-block;
-  padding: 5px;
-}
-
-#query-response-msg {
-  display: none;
 }
 
 #spotify-logo {

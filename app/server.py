@@ -8,10 +8,8 @@ Execution:
     $ python app/server.py
 """
 
-import dialogflow
 from flask import Flask, render_template
 from flask_socketio import SocketIO
-from google.oauth2 import service_account
 import json
 import logging
 import os
@@ -51,72 +49,6 @@ def start_user_session():
     NEW_CLIENT_IDX = (NEW_CLIENT_IDX + 1) % MAX_CLIENT_SESSIONS
     CLIENT_COUNT += 1
     socket_io.emit('session key', dict(session_key=session_key))
-
-@socket_io.on("query")
-def handle_user_query(data):
-    if 'language_code' not in data:
-        # Default to English
-        data['language_code'] = 'en'
-
-    print(f"Received query '{data['text']}' with session key: '{data['session_key']}'")
-
-    try:
-        if DIALOGFLOW_CREDS is None:
-            # Depends on env var GOOGLE_APPLICATION_CREDENTIALS
-            df_client = dialogflow.SessionsClient()
-        else:
-            df_client = dialogflow.SessionsClient(credentials=DIALOGFLOW_CREDS)
-        session = df_client.session_path(DIALOGFLOW_PROJECT_ID, data['session_key'])
-
-    except Exception as e:
-        print("ERROR: Can't talk to dialogflow without creds:", e)
-        socket_io.emit("message", data=dict(msg="Sorry, I'm not feeling well. Please come back later."))
-        return
-
-    query_input = dialogflow.types.QueryInput(
-        text=dialogflow.types.TextInput(
-            text=data['text'],
-            language_code=data['language_code'],
-        )
-    )
-
-    try:
-        resp = df_client.detect_intent(session, query_input)
-    except Exception as e:
-        print(f"ERROR: Could not send query with Dialogflow agent: '{e}''")
-        socket_io.emit(
-            'message',
-            dict(msg="Sorry I was thinking about something else, please try again.")
-        )
-        return
-
-    msg_to_user, spotify_uri = None, None
-    params = {x[0]:x[1] for x in resp.query_result.parameters.items()}
-    if resp.query_result.intent.display_name == "Find Song":
-        msg_to_user, spotify_uri = find_song(params["song"], params["artist"])
-
-    elif resp.query_result.intent.display_name == "Find Slightly Different Song":
-        msg_to_user, spotify_uri = get_finegrained_recommendation(params["song"], params["audio_feature_adjective"])
-
-    else:
-        msg_to_user = "Hmm, could you phrase that a little differently?"
-
-    if spotify_uri is not None:
-        print("Found song to play!")
-        socket_io.emit(
-            "play song",
-            data=dict(
-                spotify_uri=spotify_uri,
-                msg=msg_to_user,
-            ),
-        )
-
-    else:
-        print("Could not find song to play!")
-        socket_io.emit(
-            'message',
-            dict(msg=msg_to_user)
-        )
 
 def find_song(song, artist):
     """Fetches Spotify URI for specified song.
@@ -194,18 +126,16 @@ def get_finegrained_recommendation(song, adjective, artist=None):
                 return f"Found '{candidate_song['song_name']}' by {related_artist}", spotify_uri
     return f"Unfortunately, I could not find a song '{adjective}' than '{song}'.", None
 
+@socket_io.on("get random song")
+def get_random_song():
+    socket_io.emit(
+        "play song",
+        data=dict(spotify_uri=music_api.get_random_song()),
+    )
+
 
 if __name__ == '__main__':
-    DIALOGFLOW_PROJECT_ID = os.environ.get("DIALOGFLOW_PROJECT_ID")
     # on Heroku, the port is an environment variable
     port = int(os.environ.get("PORT", 5000))
-    dialogflow_key_file_raw_json = os.environ.get("DIALOGFLOW_KEY_FILE_RAW")
-
-    if dialogflow_key_file_raw_json is not None:
-        dialogflow_key_file_json = json.loads(dialogflow_key_file_raw_json)
-        DIALOGFLOW_CREDS = service_account.Credentials.from_service_account_info(
-            dialogflow_key_file_json
-        )
-
     print("Running muze service on port:", port)
     socket_io.run(app, host="0.0.0.0", port=port)

@@ -7,6 +7,8 @@
 */
 
 // =====
+// Grab Bearer Token from URL
+// ---
 // Adapted from https://glitch.com/edit/#!/spotify-implicit-grant
 const hash = window.location.hash
     .substring(1)
@@ -100,6 +102,9 @@ window.onSpotifyWebPlaybackSDKReady = () => {
       });
   };
 
+// =====
+// Spotify Player platform for use by other client modules
+// ---
 // Gets access token and plays a track
 const play = ({
     spotify_uri,

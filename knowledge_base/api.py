@@ -1,3 +1,4 @@
+import random
 import sqlite3
 from contextlib import closing
 
@@ -390,6 +391,17 @@ class KnowledgeBaseAPI:
             print("ERROR: failed to find songs for artist '{0}'".format(
                 artist))
             return None
+
+    def get_random_song(self):
+        """Returns Spotify URI for random song (or None)"""
+        songs = self.get_all_song_names()
+        song_name = songs[random.randrange(len(songs))]
+        hits = self.get_song_data(song_name=song_name)
+        if len(hits) == 0:
+            # Just return Oops! I did it again by Britney
+            return 'spotify:track:6naxalmIoLFWR0siv8dnQQ'
+        else:
+            return hits[0].get('spotify_uri')
 
     def get_node_ids_by_entity_type(self, entity_name):
         """Retrieves and organizes IDs of all nodes that match given entity name.
