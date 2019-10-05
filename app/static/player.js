@@ -69,14 +69,7 @@ window.onSpotifyWebPlaybackSDKReady = () => {
 
     // Event https://developer.spotify.com/documentation/web-playback-sdk/reference/#event-player-state-changed
     // Obj. https://developer.spotify.com/documentation/web-playback-sdk/reference/#object-web-playback-state
-    player.addListener('player_state_changed', ({
-        position,
-        duration,
-        track_window: { current_track }
-    }) => {
-        console.log("Player state changed! Track is now: ", current_track);
-        console.log('Position in Song', position);
-        console.log('Duration of Song', duration);
+    player.addListener('player_state_changed', ({ track_window: { current_track } }) => {
         if (current_track !== undefined && current_track['uri'] !== mostRecentTrackUri) {
             updateAlbumArt(
                 current_track['album']['images'][0]['url'],
@@ -101,6 +94,18 @@ window.onSpotifyWebPlaybackSDKReady = () => {
         }
       });
   };
+
+const getCurrentSong = () => {
+    return player.getCurrentState().then((state) => {
+        if (!state) {
+            return undefined;
+        }
+        return {
+            spotify_uri: state.track_window.current_track.uri,
+            name: state.track_window.current_track.name
+        }
+    });
+}
 
 // =====
 // Spotify Player platform for use by other client modules
@@ -128,19 +133,24 @@ const play = ({
     });
 };
 
-const playSong = (spotify_uri) => {
+const PlaySong = (spotify_uri) => {
     if (spotify_uri === undefined) {
         console.log("Need Spotify URI to play song.");
-    }
-    if (player !== undefined) {
-        play({
-            playerInstance: player,
-            spotify_uri: spotify_uri,
-        });
-    } else {
+        return false;
+    } else if (player === undefined) {
         console.log("Waiting for player to load...");
+        return false;
     }
+    play({
+        playerInstance: player,
+        spotify_uri: spotify_uri,
+    });
 }
+
+const GetCurrentSong = () => {
+    return getCurrentSong();
+}
+
 
 const updateTrackInfo = (songName, artistName, albumName) => {
     let elem = $("#track-name");

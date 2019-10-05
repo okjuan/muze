@@ -150,6 +150,9 @@ class KnowledgeBaseAPI:
 
         A warning is issued if the given rel_str not one of the 'approved' ones.
 
+        NOTE: as of Oct 5 2019, the database does not contain song-song similarity data.
+            (Even though the schema supports it; it's just an issue of filling up the DB!)
+
         Params:
             entity_name (string): name of entity (e.g. "Justin Bieber").
             rel_str (string): e.g. "similar to", "of genre".
@@ -359,7 +362,7 @@ class KnowledgeBaseAPI:
         Returns:
             (list of dicts): containing song names and semantic network IDs by given artist.
                 None if artist is ambiguous or not found.
-                e.g. [{"name": "Despacito", "id": 1}, {"name": "Sorry", "id":2}]
+                e.g. [{"song_name": "Despacito", "id": 1}, {"song_name": "Sorry", "id":2}]
         """
         matching_artist_node_ids = self._get_matching_node_ids(artist)
         if len(matching_artist_node_ids) == 0:

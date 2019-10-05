@@ -2,7 +2,6 @@
 This module defines the server's routing, including:
 - a GET endpoint for getting the Muze interface
 - dispatchers and handlers for web socket events
-- logic for using a Dialogflow to match user intents
 
 Execution:
     $ python app/server.py
@@ -50,67 +49,90 @@ def start_user_session():
     CLIENT_COUNT += 1
     socket_io.emit('session key', dict(session_key=session_key))
 
-def find_song(song, artist):
-    """Fetches Spotify URI for specified song.
-
-    Params:
-        song (str): e.g. "thank u, next"
-
-    Returns:
-        msg (str): describing result.
-        spotify_uri (str).
-
-    """
-    if song is None or len(song) == 0:
-        return f"Unfortunately, I could not understand the song name. Please try again.", None
-
-    hits = music_api.get_song_data(song)
-    if len(hits) == 0:
-        return f"Unfortunately, I couldn't find {song}.", None
+@socket_io.on("get recommendation")
+def handle_get_recommendation(data):
+    song, adjective = data.get('song'), data.get('adjective')
+    if adjective is None:
+        print(f"Received request for song similar to '{song}'")
+        spotify_uri = get_similar_song(song)
     else:
-        if artist is not None and len(artist) > 0:
-            for hit in hits:
-                if hit['artist_name'] == artist:
-                    return f"Found '{song}' by {artist}", hit['spotify_uri']
-            return f"Unfortunately, I couldn't find {song} by {artist}.", None
+        print(f"Received '{adjective}' request for song '{song}'")
+        spotify_uri = get_finegrained_recommendation(song, adjective)
 
-        else:
-            cur_artist = hits[0]['artist_name']
-            spotify_uri = hits[0]['spotify_uri']
-            return f"Found '{song}' by {cur_artist}", spotify_uri
+    if spotify_uri is None:
+        msg = f"Could not get recommendation for song '{song}'"
+        print(msg)
+        socket_io.emit('msg', msg)
+    else:
+        print(f"Found recommendation for song '{song}'")
+        socket_io.emit('play song', data=dict(spotify_uri=spotify_uri))
+
+def get_similar_song(song_name):
+    """Encapsulates interaction with music API for getting a recommendation.
+
+    Params: song_name (str): e.g. 'No One', 'needy', etc.
+    Returns: (str): a spotify URI or None if failure.
+    """
+    cur_song_data = music_api.get_song_data(song_name)
+    if cur_song_data == []:
+        print(f"ERR: Could not find song '{song_name}'.")
+        return None
+    elif len(cur_song_data) > 1:
+        print(f"WARN: Found {len(cur_song_data)} hits for song '{song_name}'. Choosing one arbitrarily.")
+    cur_song_data = cur_song_data[0]
+
+    recommended_songs = music_api.get_related_entities(song_name)
+    if recommended_songs == []:
+        cur_artist = cur_song_data['artist_name']
+        related_artists = music_api.get_related_entities(cur_artist) + [cur_artist]
+        if len(related_artists) > 0:
+            # TODO: use music api IDs (as soon as other get_related_entities called above also returns them)
+            recommended_songs = [x['song_name']
+                for x in music_api.get_songs_by_artist(
+                    related_artists[random.randint(0, len(related_artists)-1)]
+                )
+            ]
+
+    if recommended_songs == []:
+        print(f"ERR: Couldn't find recommendations for song: '{song_name}'")
+        return None
+    elif len(recommended_songs) > 1:
+        print(f"WARN: Found {len(recommended_songs)} hits for song '{song_name}'. Choosing one arbitrarily.")
+
+    recommended_song = recommended_songs[random.randint(0, len(recommended_songs)-1)]
+    hits = music_api.get_song_data(song_name=recommended_song)
+    if hits == []:
+        print(f"ERR: Couldn't find song info for: '{song_name}'")
+        return None
+    elif len(hits) > 1:
+        print(f"WARN: Found {len(hits)} hits for song '{song_name}'. Choosing one arbitrarily.")
+    return hits[0]['spotify_uri']
 
 def get_finegrained_recommendation(song, adjective, artist=None):
     """
 
     Params:
         song (str): e.g. "thank u, next".
-        adjective (str): defined as Dialogflow entity Audio-Feature-Adjective.
-            Should be a key in SONG_ADJECTIVES e.g. "bouncier", "more acoustic", etc.
+        adjective (str): should be a key in music_api.SONG_ADJECTIVES
+            e.g. "bouncier", "more acoustic", etc.
 
     Returns:
-        msg (str): describing result.
-        spotify_uri (str).
-
+        spotify_uri (str): None if cannot make recommendation.
     """
-    if song is None or len(song) == 0:
-        return "Unfortunately, I could not understand the song name. Please try again.", None
-    elif adjective is None or len(adjective) == 0:
-        return "Unfortunately, I could not understand that phrase. Please try again.", None
-
     hits = [
         hit for hit in music_api.get_song_data(song)
         if artist is None or hit["artist_name"].upper() == artist.upper()
     ]
     if len(hits) == 0:
-        msg = f"Unfortunately, I could not find song '{song}'"
         if artist is None:
-            return msg + ".", None
+            print(f"ERR: Could not find song '{song}'.")
         else:
-            return f"{msg} by '{artist}'", None
-
+            print(f"ERR: Could not find song '{song}' by '{artist}'")
+        return None
     elif len(hits) > 1:
         print(f"WARN: Found {len(hits)} hits for song '{song}'. Choosing one arbitrarily.")
-    cur_song_data = hits[0]
+
+    cur_song_data = hits[random.randint(0,len(hits)-1)]
     cur_artist = cur_song_data['artist_name']
     cur_song_id = cur_song_data["id"]
 
@@ -123,8 +145,10 @@ def get_finegrained_recommendation(song, adjective, artist=None):
             if music_api.songs_are_related(candidate_song["id"], cur_song_id, rel_str=adjective):
                 song_data = music_api.get_song_data(candidate_song["song_name"], candidate_song["id"])
                 spotify_uri = song_data[0]['spotify_uri']
-                return f"Found '{candidate_song['song_name']}' by {related_artist}", spotify_uri
-    return f"Unfortunately, I could not find a song '{adjective}' than '{song}'.", None
+                print(f"Found '{candidate_song['song_name']}' by {related_artist}")
+                return spotify_uri
+    print(f"ERR: Could not find a song '{adjective}' than '{song}'.")
+    return None
 
 @socket_io.on("get random song")
 def get_random_song():
