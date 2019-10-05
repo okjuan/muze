@@ -17,7 +17,7 @@ mv temp_index.js app/static/index.js
 
 # lil trick to open browser after server is started (next cmd)
 sleep 1 && open "http://localhost:5000" &
-python app/server.py >server_output.txt 2>&1
+python app/server.py
 
 # close tunnel after server is closed
 echo "Closing ssh tunnel.."
