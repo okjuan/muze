@@ -25,7 +25,7 @@ let bearer_token = hash.access_token;
 const authEndpoint = 'https://accounts.spotify.com/authorize';
 const clientId = '90897bcca11f4c78810f7ecadfc0a4ed';
 const redirectUri = 'https://muze-player.herokuapp.com'
-const scopes = ['streaming', 'user-read-playback-state'];
+const scopes = ['streaming', 'user-read-playback-state', "user-read-email", "user-read-private"];
 
 // If there is no token, redirect to Spotify authorization
 if (!bearer_token) {
@@ -42,11 +42,18 @@ window.onSpotifyWebPlaybackSDKReady = () => {
       getOAuthToken: cb => { cb(bearer_token); }
     });
 
-    // Error handling
-    player.addListener('initialization_error', ({ message }) => { console.error(message); });
-    player.addListener('authentication_error', ({ message }) => { console.error(message); });
-    player.addListener('account_error', ({ message }) => { console.error(message); });
-    player.addListener('playback_error', ({ message }) => { console.error(message); });
+    player.addListener('initialization_error', ({ message }) => {
+        console.error(`Received an initialization error from Spotify player: ${message}`);
+    });
+    player.addListener('authentication_error', ({ message }) => {
+        console.error(`Received an auth'n error from Spotify player: ${message}`);
+    });
+    player.addListener('account_error', ({ message }) => {
+        console.error(`Received an account error from Spotify player: ${message}`);
+    });
+    player.addListener('playback_error', ({ message }) => {
+        console.error(`Received a playback error from Spotify player: ${message}`);
+    });
 
     // Ready
     player.addListener('ready', ({ device_id }) => {
