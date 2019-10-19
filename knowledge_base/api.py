@@ -103,6 +103,8 @@ class KnowledgeBaseAPI:
         Params:
             song1_id (int): ID of song's node in semantic network.
             song2_id (int): ID of song's node in semantic network.
+            rel_str (string): Type of relationship, which must be already present in 'relations' table.
+                E.g. "similar to", "of genre".
 
         Returns:
             (bool): True iff the two given songs are related in the way described.

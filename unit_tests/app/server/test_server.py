@@ -1,10 +1,24 @@
 import unittest
 import app.server as endpoint
+from knowledge_base.api import KnowledgeBaseAPI
+from scripts import test_db_utils
 
 # TODO: use test DB
 class TestServer(unittest.TestCase):
     def setUp(self):
         self.test_app = endpoint.app
+
+    def test_get_similar_song_returns_spotify_uri(self):
+        with self.test_app.app_context():
+            spotify_uri = endpoint.get_similar_song("thank u, next")
+
+        self.assertEqual(spotify_uri[:14], "spotify:track:", "Expected to receive Spotify URI")
+
+    def test_get_similar_song_bad_song_name_returns_None(self):
+        with self.test_app.app_context():
+            spotify_uri = endpoint.get_similar_song("asdfasdf")
+
+        self.assertEqual(spotify_uri, None, "Expected to receive None.")
 
     def test_get_finegrained_recommendation_song_unknown(self):
         with self.test_app.app_context():
