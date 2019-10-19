@@ -14,9 +14,9 @@ The app consists of:
 
 ## Music Knowledge API
 The [Music Knowledge Representation API](./knowledge_base/api.py) exposes a collection of functions that encapsulate all SQL queries and logic relating to managing the database; through the API, callers may retrieve/add information from/to the database:
-* `music_api.get_artist_data(artist_name)`
-* `music_api.get_related_entities(entity_name, rel_str="similar to")`
-* `music_api.songs_are_related(song1_id, song2_id, rel_str)`
+* [`music_api.get_artist_data(artist_name)`](https://github.com/okjuan/muze/blob/145325720dcc2b87ab09fdbf7d5496a76f35c001/knowledge_base/api.py#L289)
+* [`music_api.get_related_entities(entity_name, rel_str="similar to")`](https://github.com/okjuan/muze/blob/145325720dcc2b87ab09fdbf7d5496a76f35c001/knowledge_base/api.py#L145)
+* [`music_api.songs_are_related(song1_id, song2_id, rel_str)`](https://github.com/okjuan/muze/blob/145325720dcc2b87ab09fdbf7d5496a76f35c001/knowledge_base/api.py#L95)
 
 A detailed description is available in [`design_docs/Music Knowledge Base Design Doc.pdf`](https://github.com/okjuan/muze/blob/master/design_docs/Music%20Knowledge%20Base%20Design%20Doc.pdf). This component was originally developed as part of a [distinct, collaborative project](https://github.com/MIR-Directed-Research/intelligent-music-recommender).
 
