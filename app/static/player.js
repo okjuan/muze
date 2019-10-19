@@ -7,6 +7,8 @@
 */
 
 // =====
+// Grab Bearer Token from URL
+// ---
 // Adapted from https://glitch.com/edit/#!/spotify-implicit-grant
 const hash = window.location.hash
     .substring(1)
@@ -25,7 +27,7 @@ let bearer_token = hash.access_token;
 const authEndpoint = 'https://accounts.spotify.com/authorize';
 const clientId = '90897bcca11f4c78810f7ecadfc0a4ed';
 const redirectUri = 'https://muze-player.herokuapp.com'
-const scopes = ['streaming', 'user-read-playback-state'];
+const scopes = ['streaming', 'user-read-playback-state', "user-read-email", "user-read-private"];
 
 // If there is no token, redirect to Spotify authorization
 if (!bearer_token) {
@@ -42,11 +44,18 @@ window.onSpotifyWebPlaybackSDKReady = () => {
       getOAuthToken: cb => { cb(bearer_token); }
     });
 
-    // Error handling
-    player.addListener('initialization_error', ({ message }) => { console.error(message); });
-    player.addListener('authentication_error', ({ message }) => { console.error(message); });
-    player.addListener('account_error', ({ message }) => { console.error(message); });
-    player.addListener('playback_error', ({ message }) => { console.error(message); });
+    player.addListener('initialization_error', ({ message }) => {
+        console.error(`Received an initialization error from Spotify player: ${message}`);
+    });
+    player.addListener('authentication_error', ({ message }) => {
+        console.error(`Received an auth'n error from Spotify player: ${message}`);
+    });
+    player.addListener('account_error', ({ message }) => {
+        console.error(`Received an account error from Spotify player: ${message}`);
+    });
+    player.addListener('playback_error', ({ message }) => {
+        console.error(`Received a playback error from Spotify player: ${message}`);
+    });
 
     // Ready
     player.addListener('ready', ({ device_id }) => {
@@ -60,14 +69,7 @@ window.onSpotifyWebPlaybackSDKReady = () => {
 
     // Event https://developer.spotify.com/documentation/web-playback-sdk/reference/#event-player-state-changed
     // Obj. https://developer.spotify.com/documentation/web-playback-sdk/reference/#object-web-playback-state
-    player.addListener('player_state_changed', ({
-        position,
-        duration,
-        track_window: { current_track }
-    }) => {
-        console.log("Player state changed! Track is now: ", current_track);
-        console.log('Position in Song', position);
-        console.log('Duration of Song', duration);
+    player.addListener('player_state_changed', ({ track_window: { current_track } }) => {
         if (current_track !== undefined && current_track['uri'] !== mostRecentTrackUri) {
             updateAlbumArt(
                 current_track['album']['images'][0]['url'],
@@ -93,6 +95,21 @@ window.onSpotifyWebPlaybackSDKReady = () => {
       });
   };
 
+const getCurrentSong = () => {
+    return player.getCurrentState().then((state) => {
+        if (!state) {
+            return undefined;
+        }
+        return {
+            spotify_uri: state.track_window.current_track.uri,
+            name: state.track_window.current_track.name
+        }
+    });
+}
+
+// =====
+// Spotify Player platform for use by other client modules
+// ---
 // Gets access token and plays a track
 const play = ({
     spotify_uri,
@@ -116,19 +133,24 @@ const play = ({
     });
 };
 
-const playSong = (spotify_uri) => {
+const PlaySong = (spotify_uri) => {
     if (spotify_uri === undefined) {
         console.log("Need Spotify URI to play song.");
-    }
-    if (player !== undefined) {
-        play({
-            playerInstance: player,
-            spotify_uri: spotify_uri,
-        });
-    } else {
+        return false;
+    } else if (player === undefined) {
         console.log("Waiting for player to load...");
+        return false;
     }
+    play({
+        playerInstance: player,
+        spotify_uri: spotify_uri,
+    });
 }
+
+const GetCurrentSong = () => {
+    return getCurrentSong();
+}
+
 
 const updateTrackInfo = (songName, artistName, albumName) => {
     let elem = $("#track-name");

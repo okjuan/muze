@@ -1,3 +1,4 @@
+import random
 import sqlite3
 from contextlib import closing
 
@@ -102,6 +103,8 @@ class KnowledgeBaseAPI:
         Params:
             song1_id (int): ID of song's node in semantic network.
             song2_id (int): ID of song's node in semantic network.
+            rel_str (string): Type of relationship, which must be already present in 'relations' table.
+                E.g. "similar to", "of genre".
 
         Returns:
             (bool): True iff the two given songs are related in the way described.
@@ -148,6 +151,9 @@ class KnowledgeBaseAPI:
         the same type of entity.
 
         A warning is issued if the given rel_str not one of the 'approved' ones.
+
+        NOTE: as of Oct 5 2019, the database does not contain song-song similarity data.
+            (Even though the schema supports it; it's just an issue of filling up the DB!)
 
         Params:
             entity_name (string): name of entity (e.g. "Justin Bieber").
@@ -358,7 +364,7 @@ class KnowledgeBaseAPI:
         Returns:
             (list of dicts): containing song names and semantic network IDs by given artist.
                 None if artist is ambiguous or not found.
-                e.g. [{"name": "Despacito", "id": 1}, {"name": "Sorry", "id":2}]
+                e.g. [{"song_name": "Despacito", "id": 1}, {"song_name": "Sorry", "id":2}]
         """
         matching_artist_node_ids = self._get_matching_node_ids(artist)
         if len(matching_artist_node_ids) == 0:
@@ -390,6 +396,17 @@ class KnowledgeBaseAPI:
             print("ERROR: failed to find songs for artist '{0}'".format(
                 artist))
             return None
+
+    def get_random_song(self):
+        """Returns Spotify URI for random song (or None)"""
+        songs = self.get_all_song_names()
+        song_name = songs[random.randrange(len(songs))]
+        hits = self.get_song_data(song_name=song_name)
+        if len(hits) == 0:
+            # Just return Oops! I did it again by Britney
+            return 'spotify:track:6naxalmIoLFWR0siv8dnQQ'
+        else:
+            return hits[0].get('spotify_uri')
 
     def get_node_ids_by_entity_type(self, entity_name):
         """Retrieves and organizes IDs of all nodes that match given entity name.
