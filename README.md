@@ -13,7 +13,12 @@ The app consists of:
 * A server app that contains a music knowledge API exposing info about musical entities (songs, artists, genres, relationships therein) that is internally organized using a semantic network.
 
 ## Music Knowledge API
-The Music Knowledge Representation API exposes a collection of functions that encapsulate all SQL queries and logic relating to managing the database; through the API, callers may retrieve/add information from/to the database. A detailed description is available in [`design_docs/Music Knowledge Base Design Doc.pdf`](https://github.com/okjuan/muze/blob/master/design_docs/Music%20Knowledge%20Base%20Design%20Doc.pdf). This component was originally developed as part of a [distinct, collaborative project](https://github.com/MIR-Directed-Research/intelligent-music-recommender).
+The [Music Knowledge Representation API](./knowledge_base/api.py) exposes a collection of functions that encapsulate all SQL queries and logic relating to managing the database; through the API, callers may retrieve/add information from/to the database:
+* `music_api.get_artist_data(artist_name)`
+* `music_api.get_related_entities(entity_name, rel_str="similar to")`
+* `music_api.songs_are_related(song1_id, song2_id, rel_str)`
+
+A detailed description is available in [`design_docs/Music Knowledge Base Design Doc.pdf`](https://github.com/okjuan/muze/blob/master/design_docs/Music%20Knowledge%20Base%20Design%20Doc.pdf). This component was originally developed as part of a [distinct, collaborative project](https://github.com/MIR-Directed-Research/intelligent-music-recommender).
 
 ## Development
 To run the app, you need [SQLite3](https://www.sqlite.org/download.html), [Python](https://www.python.org/downloads/) 3.5 or higher, and [pip](https://pypi.org/project/pip/). To actually use the app, you need a [Spotify premium account](https://www.spotify.com/us/premium/?utm_source=ca-en_brand_contextual_text&utm_medium=paidsearch&utm_campaign=alwayson_ucanz_ca_premiumbusiness_premium_brand+contextual+text+exact+ca-en+google&gclid=CjwKCAjwhbHlBRAMEiwAoDA3450erN_3OgzZ-r-D7byldS_fHtBu9qB4ezr_pEoPDQsepMWP1Q_7NxoCWvEQAvD_BwE&gclsrc=aw.ds) for streaming music.
