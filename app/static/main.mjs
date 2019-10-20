@@ -1,16 +1,16 @@
 // Author: Juan Carlos Gallegos.
 
+import { Player } from './player.mjs'
+
+window.onSpotifyWebPlaybackSDKReady = Player.Init;
+
 var socket = io.connect('https://muze-player.herokuapp.com');
 socket.on('connect', () => {
   socket.emit('start session');
 });
 
-socket.on('session key', (data) => {
-  sessionKey = data['session_key'];
-});
-
 socket.on('play song', (data) => {
-  PlaySong(data['spotify_uri'])
+  Player.PlaySong(data['spotify_uri']);
   $('.loading').removeClass('loading');
   // TODO: confirm that indeed there is a song playing BEFORE presenting options
   presentRecommendationOptions();
@@ -24,6 +24,7 @@ socket.on('msg', (msgStr) => {
 
 $(document).ready(() => {
   $('#random-song').on('click', () => {
+    Player.Connect();
     socket.emit('get random song');
     $('#random-song').addClass('loading');
   });
@@ -62,7 +63,7 @@ const getRecommendationButtons = () => {
       .text(btn.title)
       .on('click', () => {
         setElemClass(btn.id, 'loading');
-        GetCurrentSong().then(({spotify_uri, name}) => {
+        Player.GetCurrentSong().then(({spotify_uri, name}) => {
           // TODO: handle case where Promise does not resolve nicely
           socket.emit('get recommendation', {
             'song': name,
