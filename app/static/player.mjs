@@ -20,25 +20,23 @@ const getBearerTokenFromUrl = () => {
             return initial;
     }, {});
     window.location.hash = '';  // clean up URL
-    return hash.access_token;
+    return !hash.access_token? undefined : hash.access_token;
 }
 let bearerToken = getBearerTokenFromUrl(),
     mostRecentTrackUri = undefined,
     player = undefined;
 
-const getBearerToken = () => {
-    if (bearerToken !== undefined) {
-        return bearerToken;
-    }
-
+const redirectToLogin = () => {
     const clientId = '90897bcca11f4c78810f7ecadfc0a4ed';
-    const redirectUri = 'https://muze-player.herokuapp.com'
+    const redirectUri = 'https://muze-player.herokuapp.com';
     const scopes = ['streaming', 'user-read-playback-state', "user-read-email", "user-read-private"];
     const authEndpoint = `https://accounts.spotify.com/authorize?client_id=${clientId}&redirect_uri=${redirectUri}&scope=${scopes}&response_type=token&show_dialog=true`;
     // Redirect to Spotify authorization
     window.location = encodeURI(authEndpoint);
 }
 
+// ====================================================================
+// TODO: inject these as Player.OnNewSong, which I would then call from the listener that waits for the player state to change
 const updateTrackInfo = (songName, artistName, albumName) => {
     let elem = $("#track-name");
     elem.text(`${songName}`);
@@ -61,12 +59,23 @@ const updateAlbumArt = (albumArtUrl, songLink) => {
 const showSongMetadataElem = () => {
     $('#music-metadata-container').css('display', 'block');
 }
+// ====================================================================
 
-const InitPlayer = () => {
+const Player = {
+    IsConnected: false,
+    OnReady: () => { console.log("it's ready!!"); }
+}
+
+Player._OnReady = ({ device_id }) => {
+    console.log('Ready with Device ID', device_id);
+    Player.OnReady();
+}
+
+Player.Init = () => {
     // Spotify is linked in HTML page
     player = new Spotify.Player({
       name: 'Muze',
-      getOAuthToken: cb => { cb(getBearerToken()); }
+      getOAuthToken: cb => { cb(bearerToken); }
     });
 
     player.addListener('initialization_error', ({ message }) => {
@@ -83,9 +92,7 @@ const InitPlayer = () => {
     });
 
     // Ready
-    player.addListener('ready', ({ device_id }) => {
-      console.log('Ready with Device ID', device_id);
-    });
+    player.addListener('ready', Player._OnReady);
 
     // Not Ready
     player.addListener('not_ready', ({ device_id }) => {
@@ -111,7 +118,7 @@ const InitPlayer = () => {
     });
 };
 
-const GetCurrentSong = () => {
+Player.GetCurrentSong = () => {
     return player.getCurrentState().then((state) => {
         if (!state) {
             return undefined;
@@ -123,12 +130,15 @@ const GetCurrentSong = () => {
     });
 }
 
-const PlaySong = (spotify_uri) => {
+Player.PlaySong = (spotify_uri) => {
     if (spotify_uri === undefined) {
         console.log("ERROR: Cannot play song because no spotify URI was specified.");
         return false;
     } else if (player === undefined) {
         console.log("ERROR: Cannot play song because player is not initialized.");
+        return false;
+    } else if (Player.IsConnected == false) {
+        console.log("ERROR: Cannot play song because player is disconnected.");
         return false;
     }
     player._options.getOAuthToken(access_token => {
@@ -143,15 +153,13 @@ const PlaySong = (spotify_uri) => {
     });
 }
 
-const Player = {
-    Init: InitPlayer,
-    IsConnected: false,
-    PlaySong: PlaySong,
-    GetCurrentSong: GetCurrentSong
-}
+Player.Connect = (onReady) => {
+    if (bearerToken === undefined) {
+        redirectToLogin();
+        return false;
+    }
 
-Player.Connect = () => {
-    // Connect to the player and return promise
+    Player.OnReady = onReady;
     player.connect().then((success) => {
         if (success) {
             console.log("Connected player!");

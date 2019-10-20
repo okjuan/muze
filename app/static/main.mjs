@@ -24,9 +24,10 @@ socket.on('msg', (msgStr) => {
 
 $(document).ready(() => {
   $('#random-song').on('click', () => {
-    Player.Connect();
-    socket.emit('get random song');
-    $('#random-song').addClass('loading');
+    Player.Connect(() => {
+      socket.emit('get random song');
+      $('#random-song').addClass('loading');
+    });
   });
 });
 
