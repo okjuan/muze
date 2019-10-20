@@ -4,13 +4,13 @@
 </div>
 
 ## Overview
-The [Muze Player](http://muze-player.herokuapp.com/) is an app for discovering and listening to music. This is its source code repo.
+The [Muze Player](http://muze-player.herokuapp.com/) is an app for [interactively exploring and listening to music](https://github.com/okjuan/muze/wiki/Project-Motivations). This is its source code repo.
 
 The app integrates with Spotify's [Web Playback SDK](https://developer.spotify.com/documentation/web-playback-sdk/) for streaming music and [Web API](https://developer.spotify.com/documentation/web-api/) for compiling music metadata.
 
 The app consists of:
-* A minimal web client that streams music, accepts raw text and voice input from the user, and communicates with the server via [web sockets](https://www.fullstackpython.com/websockets.html).
-* A server app that contains a music knowledge API exposing info about musical entities (songs, artists, genres, relationships therein) that is internally organized using a semantic network.
+* A minimal web client that streams music and communicates user events to the server via [web sockets](https://www.fullstackpython.com/websockets.html).
+* A server app that contains a music knowledge API exposing info about musical entities (songs, artists, genres, relationships therein) that is internally organized using a [semantic network](https://en.wikipedia.org/wiki/Semantic_network).
 
 ## Music Knowledge API
 The [Music Knowledge Representation API](./knowledge_base/api.py) exposes a collection of functions that encapsulate all SQL queries and logic relating to managing the database; through the API, callers may retrieve/add information from/to the database:
@@ -25,7 +25,7 @@ To run the app, you need [SQLite3](https://www.sqlite.org/download.html), [Pytho
 
 Install Python packages:
 ```
-pip install -r requirements.txt
+$ pip install -r requirements.txt
 ```
 
 ### Running the App Locally
