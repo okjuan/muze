@@ -1,6 +1,25 @@
 // Author: Juan Carlos Gallegos.
 
-import { Player } from './player.mjs'
+import { GetPlayer } from './player.mjs'
+
+const Player = GetPlayer(({songName, artistName, albumName, albumArtLink, songLink}) => {
+  let elem = $("#track-name");
+  elem.text(`${songName}`);
+
+  elem = $("#artist-name");
+  elem.text(`${artistName}`);
+
+  elem = $("#album-name");
+  elem.text(`${albumName}`);
+
+  let albumArtElem = $('#album-art');
+  albumArtElem.attr('src', albumArtLink);
+
+  let songLinkElem = $('#album-art-link');
+  songLinkElem.attr('href', songLink);
+
+  $('#music-metadata-container').css('display', 'block');
+});
 
 window.onSpotifyWebPlaybackSDKReady = Player.Init;
 

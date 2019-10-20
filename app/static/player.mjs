@@ -35,40 +35,16 @@ const redirectToLogin = () => {
     window.location = encodeURI(authEndpoint);
 }
 
-// ====================================================================
-// TODO: inject these as Player.OnNewSong, which I would then call from the listener that waits for the player state to change
-const updateTrackInfo = (songName, artistName, albumName) => {
-    let elem = $("#track-name");
-    elem.text(`${songName}`);
-
-    elem = $("#artist-name");
-    elem.text(`${artistName}`);
-
-    elem = $("#album-name");
-    elem.text(`${albumName}`);
-}
-
-const updateAlbumArt = (albumArtUrl, songLink) => {
-    let albumArtElem = $('#album-art');
-    albumArtElem.attr('src', albumArtUrl);
-
-    let songLinkElem = $('#album-art-link');
-    songLinkElem.attr('href', songLink);
-}
-
-const showSongMetadataElem = () => {
-    $('#music-metadata-container').css('display', 'block');
-}
-// ====================================================================
-
 const Player = {
     IsConnected: false,
-    OnReady: () => { console.log("it's ready!!"); }
-}
-
-Player._OnReady = ({ device_id }) => {
-    console.log('Ready with Device ID', device_id);
-    Player.OnReady();
+    OnReady: () => { console.log("it's ready!!"); },
+    _OnReady: ({ device_id }) => {
+        console.log('Ready with Device ID', device_id);
+        Player.OnReady();
+    },
+    OnSongChange: ({songName, artistName, albumName, albumArtLink, songLink}) => {
+        console.log("Now Playing " + songName + " by " + artistName);
+    }
 }
 
 Player.Init = () => {
@@ -103,22 +79,26 @@ Player.Init = () => {
     // Obj. https://developer.spotify.com/documentation/web-playback-sdk/reference/#object-web-playback-state
     player.addListener('player_state_changed', ({ track_window: { current_track } }) => {
         if (current_track !== undefined && current_track['uri'] !== mostRecentTrackUri) {
-            updateAlbumArt(
-                current_track['album']['images'][0]['url'],
-                `https://open.spotify.com/track/${current_track['id']}`
-            );
-            updateTrackInfo(
-                current_track['name'],
-                current_track['artists'][0]['name'],
-                current_track['album']['name']
-            );
-            showSongMetadataElem();
-            mostRecentTrackUri = current_track['uri'];
+            Player.OnSongChange({
+                songName: current_track['name'],
+                artistName: current_track['artists'][0]['name'],
+                albumName: current_track['album']['name'],
+                albumArtLink: current_track['album']['images'][0]['url'],
+                songLink: `https://open.spotify.com/track/${current_track['id']}`
+            })
         }
     });
 };
 
 Player.GetCurrentSong = () => {
+    if (player === undefined) {
+        console.log("ERROR: Cannot get current song because player is not initialized.");
+        return undefined;
+    } else if (Player.IsConnected == false) {
+        console.log("ERROR: Cannot get current song because player is disconnected.");
+        return undefined;
+    }
+
     return player.getCurrentState().then((state) => {
         if (!state) {
             return undefined;
@@ -154,9 +134,13 @@ Player.PlaySong = (spotify_uri) => {
 }
 
 Player.Connect = (onReady) => {
-    if (bearerToken === undefined) {
+    if (player === undefined) {
+        console.log("ERROR: Cannot get current song because player is not initialized.");
+        return;
+    } else if (bearerToken === undefined) {
+        console.log("Must log in before the Spotify Player can connect. Redirecting..")
         redirectToLogin();
-        return false;
+        return;
     }
 
     Player.OnReady = onReady;
@@ -171,4 +155,9 @@ Player.Connect = (onReady) => {
     });
 }
 
-export { Player }
+const GetPlayer = (OnSongChange) => {
+    Player.OnSongChange = OnSongChange;
+    return Player
+}
+
+export { GetPlayer }
