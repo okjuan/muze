@@ -1,5 +1,7 @@
 <div>
+    <a href="http://muze-player.herokuapp.com/">
     <img style="display: inline-block; margin: 100px" src="./imgs/v0.3-app-screenshot.png" width="1000px" />
+    </a>
 <!--     <img style="display: inline-block; padding: 10px" src="./imgs/v0.3-app-mobile-screenshot.jpeg" width="100px"/> -->
 </div>
 
