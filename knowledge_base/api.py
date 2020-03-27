@@ -25,20 +25,18 @@ class KnowledgeBaseAPI:
 
         LESS_COMP = lambda val1, val2: val1 < val2
         MORE_COMP = lambda val1, val2: val1 > val2
-        self.SONG_ADJECTIVES = dict(
-            [ # workaround for keys containing spaces
-                ("more acoustic", dict(name='acousticness', comparison=MORE_COMP)),
-                ("less acoustic", dict(name='acousticness', comparison=LESS_COMP)),
-                ("less dancey", dict(name='danceability', comparison=LESS_COMP)),
-                ("more popular", dict(name="popularity", comparison=MORE_COMP)),
-                ("less popular", dict(name="popularity", comparison=LESS_COMP)),
-            ],
-            happier=dict(name='valence', comparison=MORE_COMP),
-            sadder=dict(name='valence', comparison=LESS_COMP),
-            dancier=dict(name='danceability', comparison=MORE_COMP),
-            longer=dict(name='duration_ms', comparison=MORE_COMP),
-            shorter=dict(name='duration_ms', comparison=MORE_COMP),
-        )
+        self.SONG_ADJECTIVES = dict([
+            ("more acoustic", dict(name='acousticness', comparison=MORE_COMP)),
+            ("less acoustic", dict(name='acousticness', comparison=LESS_COMP)),
+            ("more popular", dict(name="popularity", comparison=MORE_COMP)),
+            ("less popular", dict(name="popularity", comparison=LESS_COMP)),
+            ("more happy", dict(name="valence", comparison=MORE_COMP)),
+            ("less happy", dict(name="valence", comparison=LESS_COMP)),
+            ("more dancey", dict(name="danceability", comparison=MORE_COMP)),
+            ("less dancey", dict(name="danceability", comparison=LESS_COMP)),
+            ("more long", dict(name="duration_ms", comparison=MORE_COMP)),
+            ("less long", dict(name="duration_ms", comparison=LESS_COMP)),
+        ])
 
     def _get_audio_feature_name(self, adjective):
         """Maps comparison phrase to its audio feature name.
@@ -46,11 +44,11 @@ class KnowledgeBaseAPI:
         E.g.
             "more acoustic" => "acousticness"
             "less acoustic" => "acousticness"
-            "happier"       => "valence"
-            "sadder"        => "valence"
+            "more happy"    => "valence"
+            "less happy"    => "valence"
 
         Params:
-            adjective (str): e.g. "more acoustic", "happier".
+            adjective (str): e.g. "more acoustic", "more happy".
 
         Returns:
             (str): name of audio feature corresponding to adjective
@@ -70,7 +68,7 @@ class KnowledgeBaseAPI:
             acousticness.
 
         Params:
-            adjective (str): e.g. "more acoustic", "happier".
+            adjective (str): e.g. "more acoustic", "more happy".
 
         Returns:
             (func): with two parameters, val1 and val2, which
@@ -96,7 +94,7 @@ class KnowledgeBaseAPI:
         """Determines whether any two given songs are related in the way described.
 
         E.g. Determines whether 'thank u, next' is 'more acoustic' than 'bad idea'.
-        E.g. Determines whether 'thank u, next' is 'happier' than 'bad idea'.
+        E.g. Determines whether 'thank u, next' is 'more happy' than 'bad idea'.
 
         NOTE: order of params matters.
 
@@ -363,17 +361,17 @@ class KnowledgeBaseAPI:
 
         Returns:
             (list of dicts): containing song names and semantic network IDs by given artist.
-                None if artist is ambiguous or not found.
+                Empty if artist is ambiguous or not found.
                 e.g. [{"song_name": "Despacito", "id": 1}, {"song_name": "Sorry", "id":2}]
         """
         matching_artist_node_ids = self._get_matching_node_ids(artist)
         if len(matching_artist_node_ids) == 0:
             print("ERROR: could not find entry for artist '{}'".format(artist))
-            return None
+            return []
 
         elif len(matching_artist_node_ids) > 1:
             print("ERROR: found multiple entries for ambiguous artist name '{}'.".format(artist))
-            return None
+            return []
 
         artist_node_id = matching_artist_node_ids[0]
         try:
@@ -395,7 +393,7 @@ class KnowledgeBaseAPI:
         except sqlite3.OperationalError as e:
             print("ERROR: failed to find songs for artist '{0}'".format(
                 artist))
-            return None
+            return []
 
     def get_random_song(self):
         """Returns Spotify URI for random song (or None)"""
