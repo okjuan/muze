@@ -15,10 +15,10 @@ The app consists of:
 * A server app that contains a music knowledge API exposing info about musical entities (songs, artists, genres, relationships therein) that is internally organized using a [semantic network](https://en.wikipedia.org/wiki/Semantic_network).
 
 ## Music Knowledge API
-The [Music Knowledge Representation API](./knowledge_base/api.py) exposes a collection of functions that encapsulate all SQL queries and logic relating to managing the database; through the API, callers may retrieve/add information from/to the database:
-* [`music_api.get_artist_data(artist_name)`](https://github.com/okjuan/muze/blob/145325720dcc2b87ab09fdbf7d5496a76f35c001/knowledge_base/api.py#L289)
-* [`music_api.get_related_entities(entity_name, rel_str="similar to")`](https://github.com/okjuan/muze/blob/145325720dcc2b87ab09fdbf7d5496a76f35c001/knowledge_base/api.py#L145)
-* [`music_api.songs_are_related(song1_id, song2_id, rel_str)`](https://github.com/okjuan/muze/blob/145325720dcc2b87ab09fdbf7d5496a76f35c001/knowledge_base/api.py#L95)
+The [Music Knowledge Representation API](./knowledge_base/api.py) exposes a collection of functions that encapsulate all SQL queries and logic relating to managing the database; through the API, callers may retrieve/add information from/to the database. Among other things, the API supports queries such as:
+* [Get Artists Metadata](https://github.com/okjuan/muze/blob/145325720dcc2b87ab09fdbf7d5496a76f35c001/knowledge_base/api.py#L289)
+* [Get Related Entities](https://github.com/okjuan/muze/blob/145325720dcc2b87ab09fdbf7d5496a76f35c001/knowledge_base/api.py#L145)
+* [Are These Two Songs Related?](https://github.com/okjuan/muze/blob/145325720dcc2b87ab09fdbf7d5496a76f35c001/knowledge_base/api.py#L95)
 
 A detailed description is available in [`design_docs/Music Knowledge Base Design Doc.pdf`](https://github.com/okjuan/muze/blob/master/design_docs/Music%20Knowledge%20Base%20Design%20Doc.pdf). This component was originally developed as part of a [distinct, collaborative project](https://github.com/MIR-Directed-Research/intelligent-music-recommender).
 
@@ -50,3 +50,8 @@ Ran 56 tests in 0.943s
 
 OK
 ```
+
+### Known Issues
+Issues, bugs, and impending work are organized in the [GitHub project](https://github.com/okjuan/muze/projects/1). Some issues include:
+* API handles ambiguity naively (e.g. if an artist name has multiple matches in the database).
+* The app loads only on Chrome browser.
