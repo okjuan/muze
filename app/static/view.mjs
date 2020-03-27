@@ -3,7 +3,7 @@ const View = {
   OnReady: (loadHandler) => {
     $(document).ready(loadHandler);
   },
-  UpdateCurrentlyPlaying: ({ song, artist, album }) => {
+  UpdateCurrentlyPlaying: ({song, artist, album}) => {
     let elem = $("#track-name");
     elem.text(`${song.name}`);
 
@@ -21,14 +21,14 @@ const View = {
 
     $('#music-metadata-container').css('display', 'block');
   },
-  PresentSinglePlayButton: (clickHandler) => {
+  PresentSinglePlayButton: ({clickHandler}) => {
     // view is loaded as default view in HTML
     $('#random-song').on('click', () => {
       setElemClass('random-song', 'loading');
       clickHandler();
     });
   },
-  PresentRecommendationControls: (recommendationHandler, randomSongHandler) => {
+  PresentRecommendationControls: ({recommendationHandler, randomSongHandler}) => {
     if (View.RecommendationButtons === undefined) {
       View.RecommendationButtons = getRecommendationButtons(recommendationHandler, randomSongHandler);
     }
@@ -41,6 +41,9 @@ const View = {
       randSongBtn.remove();
     });
   },
+
+  // code smell: is it really necessary to expose this method? couldn't we instead
+  //             update the state when the View updates?
   SetState: ({loading}) => {
     if (loading === false) {
       $('.loading').removeClass('loading');

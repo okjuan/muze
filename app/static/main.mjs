@@ -7,13 +7,14 @@ const State = {
   Playing: false
 }
 
-const Player = GetPlayer(({songName, artistName, albumName, albumArtLink, songLink}) => {
+const Player = GetPlayer();
+Player.OnSongChange = ({songName, artistName, albumName, albumArtLink, songLink}) => {
   View.UpdateCurrentlyPlaying({
     song: {name: songName, link: songLink},
     artist: {name: artistName},
     album: {name: albumName, coverLink: albumArtLink}
   })
-});
+};
 
 window.onSpotifyWebPlaybackSDKReady = Player.Init;
 
@@ -25,10 +26,17 @@ socket.on('connect', () => {
 socket.on('play song', (data) => {
   if (State.Playing == false) {
     // TODO: confirm that indeed there is a song playing BEFORE presenting options
-    View.PresentRecommendationControls(recommendationHandler, () => socket.emit("get random song"));
+    // - surely I should be checking something like Player.IsPlaying?
+    View.PresentRecommendationControls({
+      recommendationHandler: recommendationHandler,
+      randomSongHandler: () => socket.emit("get random song"),
+    });
   }
-  Player.PlaySong(data['spotify_uri']);
+  Player.PlaySong({spotify_uri: data['spotify_uri']});
   State.Playing = true;
+
+  // code smell: is it really necessary to expose this method? couldn't we instead
+  //             update the state when the View updates?
   View.SetState({loading: false});
 });
 
@@ -50,9 +58,9 @@ socket.on('msg', (msgStr) => {
 })
 
 View.OnReady(() => {
-  View.PresentSinglePlayButton(() => {
-    Player.Connect(() => {
-      socket.emit('get random song');
-    })
+  View.PresentSinglePlayButton({
+    clickHandler: () => {
+      Player.Connect({ OnReady: () => { socket.emit('get random song'); } })
+    }
   });
 })
