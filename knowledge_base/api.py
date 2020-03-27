@@ -361,17 +361,17 @@ class KnowledgeBaseAPI:
 
         Returns:
             (list of dicts): containing song names and semantic network IDs by given artist.
-                None if artist is ambiguous or not found.
+                Empty if artist is ambiguous or not found.
                 e.g. [{"song_name": "Despacito", "id": 1}, {"song_name": "Sorry", "id":2}]
         """
         matching_artist_node_ids = self._get_matching_node_ids(artist)
         if len(matching_artist_node_ids) == 0:
             print("ERROR: could not find entry for artist '{}'".format(artist))
-            return None
+            return []
 
         elif len(matching_artist_node_ids) > 1:
             print("ERROR: found multiple entries for ambiguous artist name '{}'.".format(artist))
-            return None
+            return []
 
         artist_node_id = matching_artist_node_ids[0]
         try:
@@ -393,7 +393,7 @@ class KnowledgeBaseAPI:
         except sqlite3.OperationalError as e:
             print("ERROR: failed to find songs for artist '{0}'".format(
                 artist))
-            return None
+            return []
 
     def get_random_song(self):
         """Returns Spotify URI for random song (or None)"""

@@ -164,7 +164,7 @@ class TestMusicKnowledgeBaseAPI(unittest.TestCase):
 
     def test_get_songs_unknown_artist(self):
         res = self.kb_api.get_songs_by_artist("Unknown artist")
-        self.assertEqual(res, None, "Unexpected songs retrieved for unknown artist.")
+        self.assertEqual(res, [], "Unexpected songs retrieved for unknown artist.")
 
     def test_songs_are_related_popularity(self):
         self.assertEqual(
