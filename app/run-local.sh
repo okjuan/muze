@@ -1,9 +1,11 @@
-# Run app locally.
+# ==========
+# DEPRECATED
+# ==========
+# ...because serveo.net is unavailable
+# so, this can be revived, probably in a better way, by writing commands
+# that fetch the bearer token and place it into the code.
 
-export GOOGLE_APPLICATIONS_CREDENTIALS=$MUZE_PATH_TO_CREDS
-export DIALOGFLOW_PROJECT_ID=$MUZE_PROJECT_ID
-
-# run in background
+# Run app in the background
 echo "Opening ssh tunnel for port forwarding at muze.serveo.net"
 ssh -N -R muze-player:80:localhost:5000 serveo.net >/dev/null 2>&1 &
 SSH_PID=$!
