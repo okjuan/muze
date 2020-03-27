@@ -47,17 +47,17 @@ class TestServer(unittest.TestCase):
         self.assertEqual(spotify_uri[:14], "spotify:track:", "Expected to receive Spotify URI")
 
         with self.test_app.app_context():
-            spotify_uri = endpoint.get_finegrained_recommendation("7 rings", "happier")
+            spotify_uri = endpoint.get_finegrained_recommendation("7 rings", "more happy")
 
         self.assertEqual(spotify_uri[:14], "spotify:track:", "Expected to receive Spotify URI")
 
         with self.test_app.app_context():
-            spotify_uri = endpoint.get_finegrained_recommendation("7 rings", "sadder")
+            spotify_uri = endpoint.get_finegrained_recommendation("7 rings", "less happy")
 
         self.assertEqual(spotify_uri[:14], "spotify:track:", "Expected to receive Spotify URI")
 
         with self.test_app.app_context():
-            spotify_uri = endpoint.get_finegrained_recommendation("7 rings", "dancier")
+            spotify_uri = endpoint.get_finegrained_recommendation("7 rings", "more dancey")
 
         self.assertEqual(spotify_uri[:14], "spotify:track:", "Expected to receive Spotify URI")
 

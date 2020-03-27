@@ -60,9 +60,10 @@ const getRecommendationButtons = (recommendationHandler, randomSongHandler) => {
     {adj: 'more acoustic',  title: 'No, more acoustic',      id: 'more-acoustic-rec-btn'},
     {adj: 'less popular',   title: 'Actually, more obscure', id: 'more-obscure-rec-btn'},
     {adj: 'more popular',   title: 'More mainstream please', id: 'more-popular-rec-btn'},
-    {adj: 'happier',        title: 'Damn, cheer up',         id: 'happier-rec-btn'},
-    {adj: 'sadder',         title: 'Make it sad :(',         id: 'sadder-rec-btn'},
-    {adj: 'dancier',        title: 'I wanna dance to it!',   id: 'dancier-rec-btn'},
+    {adj: 'more happy',     title: 'Damn, cheer up',         id: 'happier-rec-btn'},
+    {adj: 'less happy',     title: 'Make it sad :(',         id: 'sadder-rec-btn'},
+    {adj: 'less dancey',    title: 'I don\'t dance',         id: 'dancier-rec-btn'},
+    {adj: 'more dancey',    title: 'I wanna dance to it!',   id: 'dancier-rec-btn'},
   ]) {
     recommendationButtons.push($('<button></button>')
       .attr('id', btn.id)
