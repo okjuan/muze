@@ -189,6 +189,8 @@ class KnowledgeBaseAPI:
     def get_all_song_names(self):
         """Gets all song names from database.
 
+        TODO: this is not scalable. Support paging or something.
+
         Returns:
             (list of str): song names.
         """
@@ -214,7 +216,7 @@ class KnowledgeBaseAPI:
 
         Params:
             song_name (str): optional only if song_id is provided e.g. "thank u, next".
-            song_id (int): ID of song in semantic network; optional only if song_id is provided.
+            song_id (int): ID of song in semantic network; optional only if song_name is provided.
 
         Returns:
             (list of dicts): each dict contains song_name and artist_name keys. Empty if not matches found or error.
@@ -584,7 +586,15 @@ class KnowledgeBaseAPI:
 
         return node_id
 
-    def add_song(self, name, artist, duration_ms=None, popularity=None, spotify_uri=None, audio_features=dict()):
+    def add_song(
+        self,
+        name,
+        artist,
+        duration_ms=None,
+        popularity=None,
+        spotify_uri=None,
+        audio_features=dict()
+    ):
         """Inserts given values into two tables: songs and nodes.
 
         Ensures that:

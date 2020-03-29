@@ -22,8 +22,6 @@ app = Flask(__name__)
 socket_io = SocketIO(app)
 music_api = KnowledgeBaseAPI('knowledge_base/knowledge_base.db')
 
-DIALOGFLOW_CREDS = None
-DIALOGFLOW_PROJECT_ID = None
 CLIENT_SESSION_KEYS, NEW_CLIENT_IDX, = [None for i in range(100)], 0
 CLIENT_COUNT, MAX_CLIENT_SESSIONS = 0, 100
 

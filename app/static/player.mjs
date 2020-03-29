@@ -110,7 +110,7 @@ Player.GetCurrentSong = () => {
     });
 }
 
-Player.PlaySong = (spotify_uri) => {
+Player.PlaySong = ({spotify_uri}) => {
     if (spotify_uri === undefined) {
         console.log("ERROR: Cannot play song because no spotify URI was specified.");
         return false;
@@ -133,7 +133,7 @@ Player.PlaySong = (spotify_uri) => {
     });
 }
 
-Player.Connect = (onReady) => {
+Player.Connect = ({OnReady}) => {
     if (player === undefined) {
         console.log("ERROR: Cannot get current song because player is not initialized.");
         return;
@@ -143,7 +143,7 @@ Player.Connect = (onReady) => {
         return;
     }
 
-    Player.OnReady = onReady;
+    Player.OnReady = OnReady;
     player.connect().then((success) => {
         if (success) {
             console.log("Connected player!");
@@ -155,8 +155,7 @@ Player.Connect = (onReady) => {
     });
 }
 
-const GetPlayer = (OnSongChange) => {
-    Player.OnSongChange = OnSongChange;
+const GetPlayer = () => {
     return Player
 }
 
