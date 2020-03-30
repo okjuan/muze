@@ -1,7 +1,7 @@
 const View = {
   RecommendationButtons: undefined,
-  OnReady: (loadHandler) => {
-    $(document).ready(loadHandler);
+  OnReady: (loadView) => {
+    $(document).ready(loadView());
   },
   UpdateCurrentlyPlaying: ({song, artist, album}) => {
     let elem = $("#track-name");
@@ -58,15 +58,15 @@ const setElemClass = (id, cssClass) => {
 const getRecommendationButtons = (recommendationHandler, randomSongHandler) => {
   let recommendationButtons = [];
   for (let btn of [
-    {adj: undefined,        title: 'More like this',         id: 'similar-rec-btn'},
-    {adj: 'less acoustic',  title: 'More electric!',         id: 'more-electric-rec-btn'},
-    {adj: 'more acoustic',  title: 'No, more acoustic',      id: 'more-acoustic-rec-btn'},
-    {adj: 'less popular',   title: 'Actually, more obscure', id: 'more-obscure-rec-btn'},
-    {adj: 'more popular',   title: 'More mainstream please', id: 'more-popular-rec-btn'},
-    {adj: 'more happy',     title: 'Damn, cheer up',         id: 'happier-rec-btn'},
-    {adj: 'less happy',     title: 'Make it sad :(',         id: 'sadder-rec-btn'},
-    {adj: 'less dancey',    title: 'I don\'t dance',         id: 'dancier-rec-btn'},
-    {adj: 'more dancey',    title: 'I wanna dance to it!',   id: 'dancier-rec-btn'},
+    {adj: undefined,        title: 'More like this',        id: 'similar-rec-btn'},
+    {adj: 'less acoustic',  title: 'More electric',         id: 'more-electric-rec-btn'},
+    {adj: 'more acoustic',  title: 'More acoustic',         id: 'more-acoustic-rec-btn'},
+    {adj: 'less popular',   title: 'More obscure',          id: 'more-obscure-rec-btn'},
+    {adj: 'more popular',   title: 'More mainstream',       id: 'more-popular-rec-btn'},
+    {adj: 'more happy',     title: 'Happier',               id: 'happier-rec-btn'},
+    {adj: 'less happy',     title: 'Sadder',                id: 'sadder-rec-btn'},
+    {adj: 'less dancey',    title: 'Less dancey',           id: 'dancier-rec-btn'},
+    {adj: 'more dancey',    title: 'Dancier',               id: 'dancier-rec-btn'},
   ]) {
     recommendationButtons.push($('<button></button>')
       .attr('id', btn.id)
