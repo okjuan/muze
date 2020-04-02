@@ -22,7 +22,7 @@ const View = {
     $('#music-metadata-container').css('display', 'block');
   },
   PresentSinglePlayButton: ({clickHandler}) => {
-    // view is loaded as default view in HTML
+    // default view contains button for playing random song
     $('#random-song').on('click', () => {
       setElemClass('random-song', 'loading');
       clickHandler();
@@ -32,14 +32,23 @@ const View = {
     if (View.RecommendationButtons === undefined) {
       View.RecommendationButtons = getRecommendationButtons(recommendationHandler, randomSongHandler);
     }
-    let randSongBtn = $('#random-song');
-    if (randSongBtn.length === 0) {
+
+    let controlsContainer = $('#player-controls-container');
+    if (controlsContainer.length === 0) {
+      console.log("ERROR: Could not find location to present recommendation controls.")
       return;
     }
-    randSongBtn.hide('slow', () => {
-      randSongBtn.after(View.RecommendationButtons);
-      randSongBtn.remove();
-    });
+
+    let currentPlayerControls = controlsContainer.children();
+    if (currentPlayerControls.length === 0) {
+      controlsContainer.append(View.RecommendationButtons);
+
+    } else {
+      currentPlayerControls.hide('slow', () => {
+        controlsContainer.append(View.RecommendationButtons);
+        currentPlayerControls.remove();
+      });
+    }
   },
 
   // code smell: is it really necessary to expose this method? couldn't we instead
@@ -65,7 +74,7 @@ const getRecommendationButtons = (recommendationHandler, randomSongHandler) => {
     {adj: 'more popular',   title: 'More mainstream',       id: 'more-popular-rec-btn'},
     {adj: 'more happy',     title: 'Happier',               id: 'happier-rec-btn'},
     {adj: 'less happy',     title: 'Sadder',                id: 'sadder-rec-btn'},
-    {adj: 'less dancey',    title: 'Less dancey',           id: 'dancier-rec-btn'},
+    {adj: 'less dancey',    title: 'Less dancey',           id: 'less-dancey-rec-btn'},
     {adj: 'more dancey',    title: 'Dancier',               id: 'dancier-rec-btn'},
   ]) {
     recommendationButtons.push($('<button></button>')

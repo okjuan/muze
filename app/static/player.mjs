@@ -134,6 +134,10 @@ Player.PlaySong = ({spotify_uri}) => {
 }
 
 Player.Connect = ({OnReady}) => {
+    if (Player.IsConnected === true) {
+        console.log("Player already connected.");
+        OnReady();
+    }
     if (player === undefined) {
         console.log("ERROR: Cannot get current song because player is not initialized.");
         return;
