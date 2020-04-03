@@ -41,7 +41,7 @@ const View = {
 
     let currentPlayerControls = controlsContainer.children();
     if (currentPlayerControls.length === 0) {
-      controlsContainer.append(View.RecommendationButtons);
+      controlsContainer.appendTo(View.RecommendationButtons);
 
     } else {
       currentPlayerControls.hide('slow', () => {
@@ -62,6 +62,7 @@ const View = {
       console.log("Aborting presentation of palylist conotrols, as they are already present.");
     }
 
+    // TODO: https://stackoverflow.com/a/1520352
     playlistControls.append(
       $("<button></button>")
         .attr('id', 'add-song-to-playlist')

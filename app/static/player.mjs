@@ -22,9 +22,8 @@ const getBearerTokenFromUrl = () => {
     window.location.hash = '';  // clean up URL
     return !hash.access_token? undefined : hash.access_token;
 }
-let bearerToken = getBearerTokenFromUrl(),
-    mostRecentTrackUri = undefined,
-    player = undefined;
+let bearerToken = getBearerTokenFromUrl();
+
 
 const redirectToLogin = ({authEndpointTemplate, clientId, authScopes, redirectUrl}) => {
     // Redirect to Spotify authorization
@@ -35,6 +34,7 @@ const redirectToLogin = ({authEndpointTemplate, clientId, authScopes, redirectUr
     }));
 }
 
+let mostRecentTrackUri = undefined, player = undefined;
 const Player = {
     IsConnected: false,
     OnReady: () => { console.log("it's ready!!"); },
@@ -67,10 +67,8 @@ Player.Init = () => {
         console.error(`Received a playback error from Spotify player: ${message}`);
     });
 
-    // Ready
     player.addListener('ready', Player._OnReady);
 
-    // Not Ready
     player.addListener('not_ready', ({ device_id }) => {
       console.log('Device ID has gone offline', device_id);
     });
@@ -165,8 +163,4 @@ Player.Connect = ({authEndpointTemplate, clientId, authScopes, redirectUrl, onRe
     });
 }
 
-const GetPlayer = () => {
-    return Player
-}
-
-export { GetPlayer }
+export { Player }

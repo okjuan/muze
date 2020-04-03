@@ -1,26 +1,17 @@
 import { AppConfig, SpotifyConfig } from './config.mjs'
-import { GetPlayer } from './player.mjs'
+import { Player } from './player.mjs'
 import { GetPlaylistEditor } from './playlistEditor.mjs'
 import { View } from './view.mjs'
 
-const State = {
-  Playing: false
-};
+window.onSpotifyWebPlaybackSDKReady = Player.Init;
 
-const Player = GetPlayer();
 const PlaylistEditor = GetPlaylistEditor({
   urlTemplateForAddingTracksToPlaylist: SpotifyConfig.EndpointTemplates.AddTracksToPlaylist
 });
 
-Player.OnSongChange = ({songName, artistName, albumName, albumArtLink, songLink}) => {
-  View.UpdateCurrentlyPlaying({
-    song: {name: songName, link: songLink},
-    artist: {name: artistName},
-    album: {name: albumName, coverLink: albumArtLink}
-  })
+const State = {
+  Streaming: false
 };
-
-window.onSpotifyWebPlaybackSDKReady = Player.Init;
 
 var socket = io.connect(AppConfig.AppIndexUrl);
 socket.on('connect', () => {
@@ -28,7 +19,7 @@ socket.on('connect', () => {
 });
 
 socket.on('play song', (data) => {
-  if (State.Playing == false) {
+  if (State.Streaming == false) {
     // TODO: confirm that indeed there is a song playing BEFORE presenting options
     // - surely I should be checking something like Player.IsPlaying?
     View.PresentRecommendationControls({
@@ -38,7 +29,7 @@ socket.on('play song', (data) => {
     View.PresentPlaylistEditorControls({addSongHandler: addSongHandler});
   }
   Player.PlaySong({spotify_uri: data['spotify_uri']});
-  State.Playing = true;
+  State.Streaming = true;
 
   // code smell: is it really necessary to expose this method? couldn't we instead
   //             update the state when the View updates?
@@ -50,6 +41,28 @@ socket.on('msg', (msgStr) => {
   // TODO: present messages in a user-friendly manner
   alert(msgStr);
 });
+
+View.OnReady(() => {
+  View.PresentSinglePlayButton({
+    clickHandler: () => {
+      Player.Connect({
+        authEndpointTemplate: SpotifyConfig.EndpointTemplates.AuthToken,
+        clientId: SpotifyConfig.Auth.ClientId,
+        authScopes: SpotifyConfig.Auth.Scopes,
+        redirectUrl: AppConfig.AppIndexUrl,
+        onReady: () => { socket.emit('get random song') }
+      })
+    }
+  });
+})
+
+Player.OnSongChange = ({songName, artistName, albumName, albumArtLink, songLink}) => {
+  View.UpdateCurrentlyPlaying({
+    song: {name: songName, link: songLink},
+    artist: {name: artistName},
+    album: {name: albumName, coverLink: albumArtLink}
+  })
+};
 
 const recommendationHandler = ({recommendType}) => {
   Player.GetCurrentSong().then(({spotify_uri, name}) => {
@@ -73,17 +86,3 @@ const addSongHandler = () => {
     View.SetState({loading: false}); // code smell!!!
   });
 };
-
-View.OnReady(() => {
-  View.PresentSinglePlayButton({
-    clickHandler: () => {
-      Player.Connect({
-        authEndpointTemplate: SpotifyConfig.EndpointTemplates.AuthToken,
-        clientId: SpotifyConfig.Auth.ClientId,
-        authScopes: SpotifyConfig.Auth.Scopes,
-        redirectUrl: AppConfig.AppIndexUrl,
-        onReady: () => { socket.emit('get random song') }
-      })
-    }
-  });
-})
