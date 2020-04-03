@@ -1,9 +1,25 @@
 import { AppConfig, SpotifyConfig } from './config.mjs'
-import { Player } from './player.mjs'
+import { SpotifyAuthHelper } from './auth.mjs'
 import { GetPlaylistEditor } from './playlistEditor.mjs'
+import { Player } from './player.mjs'
 import { View } from './view.mjs'
 
+let bearerToken = SpotifyAuthHelper.GetBearerTokenFromUrl();
+if (bearerToken === undefined) {
+  SpotifyAuthHelper.RedirectToLogin({
+    authEndpointTemplate: SpotifyConfig.authEndpointTemplate,
+    clientId: SpotifyConfig.Auth.ClientId,
+    authScopes: SpotifyConfig.Auth.Scopes,
+    redirectUrl: AppConfig.AppIndexUrl
+  });
+}
+Player.BearerToken = bearerToken;
+
 window.onSpotifyWebPlaybackSDKReady = Player.Init;
+
+View.OnReady(() => {
+  View.PresentSinglePlayButton({clickHandler: () => socket.emit('get random song')});
+})
 
 const PlaylistEditor = GetPlaylistEditor({
   urlTemplateForAddingTracksToPlaylist: SpotifyConfig.EndpointTemplates.AddTracksToPlaylist
@@ -41,20 +57,6 @@ socket.on('msg', (msgStr) => {
   // TODO: present messages in a user-friendly manner
   alert(msgStr);
 });
-
-View.OnReady(() => {
-  View.PresentSinglePlayButton({
-    clickHandler: () => {
-      Player.Connect({
-        authEndpointTemplate: SpotifyConfig.EndpointTemplates.AuthToken,
-        clientId: SpotifyConfig.Auth.ClientId,
-        authScopes: SpotifyConfig.Auth.Scopes,
-        redirectUrl: AppConfig.AppIndexUrl,
-        onReady: () => { socket.emit('get random song') }
-      })
-    }
-  });
-})
 
 Player.OnSongChange = ({songName, artistName, albumName, albumArtLink, songLink}) => {
   View.UpdateCurrentlyPlaying({
