@@ -26,13 +26,13 @@ let bearerToken = getBearerTokenFromUrl(),
     mostRecentTrackUri = undefined,
     player = undefined;
 
-const redirectToLogin = () => {
-    const clientId = '90897bcca11f4c78810f7ecadfc0a4ed';
-    const redirectUri = 'https://muze-player.herokuapp.com';
-    const scopes = ['streaming', 'user-read-playback-state', "user-read-email", "user-read-private"];
-    const authEndpoint = `https://accounts.spotify.com/authorize?client_id=${clientId}&redirect_uri=${redirectUri}&scope=${scopes}&response_type=token&show_dialog=true`;
+const redirectToLogin = ({authEndpointTemplate, clientId, authScopes, redirectUrl}) => {
     // Redirect to Spotify authorization
-    window.location = encodeURI(authEndpoint);
+    window.location = encodeURI(authEndpointTemplate.For({
+        clientId: clientId,
+        scopes: authScopes,
+        redirectUrl: redirectUrl
+    }));
 }
 
 const Player = {
@@ -133,21 +133,27 @@ Player.PlaySong = ({spotify_uri}) => {
     });
 }
 
-Player.Connect = ({OnReady}) => {
+Player.Connect = ({authEndpointTemplate, clientId, authScopes, redirectUrl, onReady}) => {
     if (Player.IsConnected === true) {
         console.log("Player already connected.");
-        OnReady();
+        onReady();
     }
     if (player === undefined) {
         console.log("ERROR: Cannot get current song because player is not initialized.");
         return;
-    } else if (bearerToken === undefined) {
+    }
+    if (bearerToken === undefined) {
         console.log("Must log in before the Spotify Player can connect. Redirecting..")
-        redirectToLogin();
+        redirectToLogin({
+            authEndpointTemplate: authEndpointTemplate,
+            clientId: clientId,
+            authScopes: authScopes,
+            redirectUrl: redirectUrl
+        });
         return;
     }
 
-    Player.OnReady = OnReady;
+    Player.OnReady = onReady;
     player.connect().then((success) => {
         if (success) {
             console.log("Connected player!");

@@ -1,8 +1,6 @@
-// Author: Juan Carlos Gallegos.
-
+import { AppConfig, SpotifyConfig } from './config.mjs'
 import { GetPlayer } from './player.mjs'
 import { GetPlaylistEditor } from './playlistEditor.mjs'
-import { SpotifyConfig } from './spotifyConfig.mjs'
 import { View } from './view.mjs'
 
 const State = {
@@ -24,7 +22,7 @@ Player.OnSongChange = ({songName, artistName, albumName, albumArtLink, songLink}
 
 window.onSpotifyWebPlaybackSDKReady = Player.Init;
 
-var socket = io.connect('https://muze-player.herokuapp.com');
+var socket = io.connect(AppConfig.AppIndexUrl);
 socket.on('connect', () => {
   socket.emit('start session');
 });
@@ -79,7 +77,13 @@ const addSongHandler = () => {
 View.OnReady(() => {
   View.PresentSinglePlayButton({
     clickHandler: () => {
-      Player.Connect({ OnReady: () => { socket.emit('get random song'); } })
+      Player.Connect({
+        authEndpointTemplate: SpotifyConfig.EndpointTemplates.AuthToken,
+        clientId: SpotifyConfig.Auth.ClientId,
+        authScopes: SpotifyConfig.Auth.Scopes,
+        redirectUrl: AppConfig.AppIndexUrl,
+        onReady: () => { socket.emit('get random song') }
+      })
     }
   });
 })
