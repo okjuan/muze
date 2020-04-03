@@ -1,13 +1,19 @@
 // Author: Juan Carlos Gallegos.
 
 import { GetPlayer } from './player.mjs'
+import { GetPlaylistEditor } from './playlistEditor.mjs'
+import { SpotifyConfig } from './spotifyConfig.mjs'
 import { View } from './view.mjs'
 
 const State = {
   Playing: false
-}
+};
 
 const Player = GetPlayer();
+const PlaylistEditor = GetPlaylistEditor({
+  urlTemplateForAddingTracksToPlaylist: SpotifyConfig.EndpointTemplates.AddTracksToPlaylist
+});
+
 Player.OnSongChange = ({songName, artistName, albumName, albumArtLink, songLink}) => {
   View.UpdateCurrentlyPlaying({
     song: {name: songName, link: songLink},
@@ -31,16 +37,23 @@ socket.on('play song', (data) => {
       recommendationHandler: recommendationHandler,
       randomSongHandler: () => socket.emit("get random song"),
     });
+    View.PresentPlaylistEditorControls({addSongHandler: addSongHandler});
   }
   Player.PlaySong({spotify_uri: data['spotify_uri']});
   State.Playing = true;
 
   // code smell: is it really necessary to expose this method? couldn't we instead
   //             update the state when the View updates?
-  View.SetState({loading: false});
+  View.SetState({loading: false}); // code smell!!!
 });
 
-const recommendationHandler = (recommendType) => {
+socket.on('msg', (msgStr) => {
+  View.SetState({loading: false}); // code smell!!!
+  // TODO: present messages in a user-friendly manner
+  alert(msgStr);
+});
+
+const recommendationHandler = ({recommendType}) => {
   Player.GetCurrentSong().then(({spotify_uri, name}) => {
     // TODO: handle case where Promise does not resolve nicely
     socket.emit('get recommendation', {
@@ -51,11 +64,17 @@ const recommendationHandler = (recommendType) => {
   });
 }
 
-socket.on('msg', (msgStr) => {
-  View.SetState({loading: false});
-  // TODO: present messages in a user-friendly manner
-  alert(msgStr);
-})
+const addSongHandler = () => {
+  Player.GetCurrentSong().then(({spotify_uri, name}) => {
+    // TODO: handle case where Promise does not resolve nicely
+    PlaylistEditor.AddSong({
+      // TODO: parametrize. (placeholder: 'fizz buzz tangle' by jcgalleg)
+      spotifyPlaylistId: "2ZjWb4BpsCMNX22waSfNuq",
+      spotifyTrackUri: spotify_uri,
+    });
+    View.SetState({loading: false}); // code smell!!!
+  });
+};
 
 View.OnReady(() => {
   View.PresentSinglePlayButton({

@@ -51,6 +51,29 @@ const View = {
     }
   },
 
+  PresentPlaylistEditorControls : ({addSongHandler}) => {
+    let playlistControls = $("#playlist-controls");
+    if (playlistControls.length === 0) {
+      console.log("ERROR: Could not find where to present playlist controls.");
+      return;
+    }
+
+    if (playlistControls.children().length !== 0) {
+      console.log("Aborting presentation of palylist conotrols, as they are already present.");
+    }
+
+    playlistControls.append(
+      $("<button></button>")
+        .attr('id', 'add-song-to-playlist')
+        .addClass('btn btn-primary btn-lg')
+        .text('Save to Playlist')
+        .on('click', () => {
+          setElemClass('add-song-to-playlist', 'loading');
+          addSongHandler();
+        })
+    );
+  },
+
   // code smell: is it really necessary to expose this method? couldn't we instead
   //             update the state when the View updates?
   SetState: ({loading}) => {
@@ -83,7 +106,7 @@ const getRecommendationButtons = (recommendationHandler, randomSongHandler) => {
       .text(btn.title)
       .on('click', () => {
         setElemClass(btn.id, 'loading');
-        recommendationHandler(btn.adj);
+        recommendationHandler({recommendType: btn.adj});
       })
     );
   }
