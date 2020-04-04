@@ -9,7 +9,7 @@ window.onSpotifyWebPlaybackSDKReady = Player.Init;
 let bearerToken = SpotifyAuthHelper.GetBearerTokenFromUrl();
 if (bearerToken === undefined) {
     SpotifyAuthHelper.RedirectToLogin({
-        authEndpointTemplate: SpotifyConfig.EndpointTemplate.AuthToken,
+        authEndpointTemplate: SpotifyConfig.EndpointTemplates.AuthToken,
         clientId: SpotifyConfig.Auth.ClientId,
         authScopes: SpotifyConfig.Auth.Scopes,
         redirectUrl: AppConfig.AppIndexUrl
