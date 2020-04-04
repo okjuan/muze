@@ -1,66 +1,117 @@
-// Author: Juan Carlos Gallegos.
-
-import { GetPlayer } from './player.mjs'
+import { AppConfig, SpotifyConfig } from './config.mjs'
+import { SpotifyAuthHelper } from './auth.mjs'
+import { GetPlaylistEditor } from './playlistEditor.mjs'
+import { Player } from './player.mjs'
 import { View } from './view.mjs'
 
-const State = {
-  Playing: false
-}
 
-const Player = GetPlayer();
-Player.OnSongChange = ({songName, artistName, albumName, albumArtLink, songLink}) => {
-  View.UpdateCurrentlyPlaying({
-    song: {name: songName, link: songLink},
-    artist: {name: artistName},
-    album: {name: albumName, coverLink: albumArtLink}
-  })
-};
-
+let bearerToken = SpotifyAuthHelper.GetBearerTokenFromUrl();
+Player.BearerToken = bearerToken;
 window.onSpotifyWebPlaybackSDKReady = Player.Init;
 
-var socket = io.connect('https://muze-player.herokuapp.com');
+View.OnReady(() => {
+    View.PresentSinglePlayButton({ clickHandler: () => {
+        if (bearerToken === undefined) {
+            SpotifyAuthHelper.RedirectToLogin({
+                authEndpointTemplate: SpotifyConfig.EndpointTemplates.AuthToken,
+                clientId: SpotifyConfig.Auth.ClientId,
+                authScopes: SpotifyConfig.Auth.Scopes,
+                redirectUrl: AppConfig.AppIndexUrl
+            });
+        } else {
+            socket.emit('get random song');
+        }
+    }});
+})
+
+const PlaylistEditor = GetPlaylistEditor({
+    urlTemplateForAddingTracksToPlaylist: SpotifyConfig.EndpointTemplates.AddTracksToPlaylist,
+    bearerToken: bearerToken
+});
+
+const State = {
+    Streaming: false
+};
+
+var socket = io.connect(AppConfig.AppIndexUrl);
 socket.on('connect', () => {
-  socket.emit('start session');
+    socket.emit('start session');
 });
 
-socket.on('play song', (data) => {
-  if (State.Playing == false) {
-    // TODO: confirm that indeed there is a song playing BEFORE presenting options
-    // - surely I should be checking something like Player.IsPlaying?
-    View.PresentRecommendationControls({
-      recommendationHandler: recommendationHandler,
-      randomSongHandler: () => socket.emit("get random song"),
-    });
-  }
-  Player.PlaySong({spotify_uri: data['spotify_uri']});
-  State.Playing = true;
+socket.on('play song', async (data) => {
+    try {
+        await Player.PlaySong({ spotify_uri: data['spotify_uri'] });
+    } catch (err) {
+        // TODO: send err as telemetry
+        return;
+    }
+    if (State.Streaming == false) {
+        // TODO: confirm that indeed there is a song playing BEFORE presenting options
+        // - surely I should be checking something like Player.IsPlaying?
+        View.PresentRecommendationControls({
+            recommendationHandler: recommendationHandler,
+            randomSongHandler: () => socket.emit("get random song"),
+        });
+        View.PresentPlaylistEditorControls({ addSongHandler: addSongHandler });
+    }
+    State.Streaming = true;
 
-  // code smell: is it really necessary to expose this method? couldn't we instead
-  //             update the state when the View updates?
-  View.SetState({loading: false});
+    // code smell: is it really necessary to expose this method? couldn't we instead
+    //             update the state when the View updates?
+    View.SetState({ loading: false }); // code smell!!!
 });
-
-const recommendationHandler = (recommendType) => {
-  Player.GetCurrentSong().then(({spotify_uri, name}) => {
-    // TODO: handle case where Promise does not resolve nicely
-    socket.emit('get recommendation', {
-      'song': name,
-      'spotify_uri': spotify_uri,
-      'adjective': recommendType
-    });
-  });
-}
 
 socket.on('msg', (msgStr) => {
-  View.SetState({loading: false});
-  // TODO: present messages in a user-friendly manner
-  alert(msgStr);
-})
+    View.SetState({ loading: false }); // code smell!!!
+    View.PresentMessage(msgStr);
+});
 
-View.OnReady(() => {
-  View.PresentSinglePlayButton({
-    clickHandler: () => {
-      Player.Connect({ OnReady: () => { socket.emit('get random song'); } })
+Player.OnSongChange = ({ songName, artistName, albumName, albumArtLink, songLink }) => {
+    View.UpdateCurrentlyPlaying({
+        song: { name: songName, link: songLink },
+        artist: { name: artistName },
+        album: { name: albumName, coverLink: albumArtLink }
+    })
+};
+
+const recommendationHandler = ({ recommendType }) => {
+    try {
+        Player.GetCurrentSong().then(({ spotify_uri, name }) => {
+            // TODO: handle case where Promise does not resolve nicely
+            socket.emit('get recommendation', {
+                'song': name,
+                'spotify_uri': spotify_uri,
+                'adjective': recommendType
+            });
+        });
+    } catch (err) {
+        // TODO: send err as telemetry
+        View.PresentMessage("I... can't think of anything right now. Ask me again later :~)");
     }
-  });
-})
+}
+
+const addSongHandler = () => {
+    try {
+        Player.GetCurrentSong().then(({spotify_uri, name}) => {
+            // TODO: handle case where Promise does not resolve nicely
+            try {
+                PlaylistEditor.AddSong({
+                    // TODO: parametrize. (placeholder: 'fizz buzz tangle' by jcgalleg)
+                    spotifyPlaylistId: "2ZjWb4BpsCMNX22waSfNuq",
+                    spotifyTrackUri: spotify_uri,
+                });
+                View.PresentMessage(`Added '${name}' to your playlist!`)
+            } catch (err) {
+                // TODO: send err as telemetry
+                View.PresentMessage(`Sorry, couldn't add '${name}' to your playlist.`)
+            } finally {
+                View.SetState({ loading: false }); // code smell!!!
+            }
+        }).catch((reason) => {
+            throw new Error(`Could not get current song with error: ${reason}`);
+        });
+    } catch (err) {
+        // TODO: send err as telemetry
+        View.PresentMessage(`Sorry, couldn't add '${name}' to your playlist.`)
+    }
+};

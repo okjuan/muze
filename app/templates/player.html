@@ -13,7 +13,7 @@
 
 <html>
 <head>
-  <title>Muze Client</title>
+  <title>Muze Radio</title>
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
@@ -28,14 +28,14 @@
   <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/socket.io/1.3.6/socket.io.min.js"></script>
   <script type="module" src="{{ url_for('static', filename='main.mjs') }}"></script>
 </head>
+
 <body class="bg-gray">
   <div class="container">
     <div class="columns">
-
       <div class="column col-10 col-mx-auto">
         <div id="main-content">
-          <h1 class="text-primary" id="title">Muze Player</h2>
-          <div>
+          <h1 class="text-primary" id="title">Muze Radio</h2>
+          <div id="player-controls-container">
             <button id="random-song" class="btn btn-primary btn-lg">Play a song</button>
           </div>
           <div class="card bg-gray" id="music-metadata-container">
@@ -53,11 +53,10 @@
               <img id="spotify-logo" src="{{ url_for('static', filename='imgs/Spotify_Logo_RGB_Black.png') }}" />
               <img id="spotify-icon" src="{{ url_for('static', filename='imgs/Spotify_Icon_RGB_Black.png') }}" />
             </div>
-
           </div>
+          <div id="playlist-controls"></div>
         </div>
       </div>
-
     </div>
   </div>
 
