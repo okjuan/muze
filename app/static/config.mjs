@@ -1,7 +1,7 @@
 const SpotifyConfig = {
     Auth: {
         ClientId: "90897bcca11f4c78810f7ecadfc0a4ed",
-        Scopes: ["streaming", "user-read-playback-state", "user-read-email", "user-read-private"]
+        Scopes: ["streaming", "user-read-playback-state", "user-read-email", "user-read-private", "playlist-modify-public"]
     },
     EndpointTemplates: {
         AuthToken: {
@@ -17,7 +17,7 @@ const SpotifyConfig = {
                     console.log(`ERROR: need array of one or more trackUris but found ${trackUris}.`)
                     return;
                 }
-                return `https://api.spotify.com/v1/playlists/${playlistId}/tracks?${trackUris.join(',')}`
+                return `https://api.spotify.com/v1/playlists/${playlistId}/tracks?uris=${encodeURIComponent(trackUris.join(','))}`
             }
         }
     }

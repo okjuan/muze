@@ -22,7 +22,8 @@ View.OnReady(() => {
 })
 
 const PlaylistEditor = GetPlaylistEditor({
-  urlTemplateForAddingTracksToPlaylist: SpotifyConfig.EndpointTemplates.AddTracksToPlaylist
+  urlTemplateForAddingTracksToPlaylist: SpotifyConfig.EndpointTemplates.AddTracksToPlaylist,
+  bearerToken: bearerToken
 });
 
 const State = {
@@ -34,7 +35,8 @@ socket.on('connect', () => {
   socket.emit('start session');
 });
 
-socket.on('play song', (data) => {
+socket.on('play song', async (data) => {
+  await Player.PlaySong({spotify_uri: data['spotify_uri']});
   if (State.Streaming == false) {
     // TODO: confirm that indeed there is a song playing BEFORE presenting options
     // - surely I should be checking something like Player.IsPlaying?
@@ -44,7 +46,6 @@ socket.on('play song', (data) => {
     });
     View.PresentPlaylistEditorControls({addSongHandler: addSongHandler});
   }
-  Player.PlaySong({spotify_uri: data['spotify_uri']});
   State.Streaming = true;
 
   // code smell: is it really necessary to expose this method? couldn't we instead
