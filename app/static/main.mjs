@@ -4,21 +4,24 @@ import { GetPlaylistEditor } from './playlistEditor.mjs'
 import { Player } from './player.mjs'
 import { View } from './view.mjs'
 
-window.onSpotifyWebPlaybackSDKReady = Player.Init;
 
 let bearerToken = SpotifyAuthHelper.GetBearerTokenFromUrl();
-if (bearerToken === undefined) {
-    SpotifyAuthHelper.RedirectToLogin({
-        authEndpointTemplate: SpotifyConfig.EndpointTemplates.AuthToken,
-        clientId: SpotifyConfig.Auth.ClientId,
-        authScopes: SpotifyConfig.Auth.Scopes,
-        redirectUrl: AppConfig.AppIndexUrl
-    });
-}
 Player.BearerToken = bearerToken;
+window.onSpotifyWebPlaybackSDKReady = Player.Init;
 
 View.OnReady(() => {
-    View.PresentSinglePlayButton({ clickHandler: () => socket.emit('get random song') });
+    View.PresentSinglePlayButton({ clickHandler: () => {
+        if (bearerToken === undefined) {
+            SpotifyAuthHelper.RedirectToLogin({
+                authEndpointTemplate: SpotifyConfig.EndpointTemplates.AuthToken,
+                clientId: SpotifyConfig.Auth.ClientId,
+                authScopes: SpotifyConfig.Auth.Scopes,
+                redirectUrl: AppConfig.AppIndexUrl
+            });
+        } else {
+            socket.emit('get random song');
+        }
+    }});
 })
 
 const PlaylistEditor = GetPlaylistEditor({
