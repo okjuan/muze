@@ -6,7 +6,7 @@
 </div>
 
 ## Overview
-The [Muze Player](http://muze-player.herokuapp.com/) is an app for [interactively exploring and listening to music](https://github.com/okjuan/muze/wiki/Project-Motivations). This is its source code repo.
+[Muze Radio](http://muze-player.herokuapp.com/) is a web app for [interactively exploring and listening to music](https://github.com/okjuan/muze/wiki/Project-Motivations). This is its source code repo.
 
 The app integrates with Spotify's [Web Playback SDK](https://developer.spotify.com/documentation/web-playback-sdk/) for streaming music and [Web API](https://developer.spotify.com/documentation/web-api/) for compiling music metadata.
 
