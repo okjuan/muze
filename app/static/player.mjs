@@ -64,19 +64,20 @@ Player.Init = () => {
 };
 
 Player.GetCurrentSong = () => {
-    ThrowIfNullOrUndefined(player);
+    Utils.ThrowIfNullOrUndefined(player);
     if (Player.IsConnected == false) {
         throw new Error("Cannot get current song because player is disconnected.");
     }
-
-    return player.getCurrentState().then((state) => {
-        if (!state) {
-            return undefined;
-        }
-        return {
-            spotify_uri: state.track_window.current_track.uri,
-            name: state.track_window.current_track.name
-        }
+    return new Promise((resolve, reject) => {
+        player.getCurrentState().then((state) => {
+            if (!state) {
+                reject("Failed to retrieve state of player.");
+            }
+            resolve({
+                spotify_uri: state.track_window.current_track.uri,
+                name: state.track_window.current_track.name
+            });
+        });
     });
 }
 

@@ -89,7 +89,7 @@ const recommendationHandler = ({ recommendType }) => {
 
 const addSongHandler = () => {
     try {
-        Player.GetCurrentSong().then(({ spotify_uri, name }) => {
+        Player.GetCurrentSong().then(({spotify_uri, name}) => {
             // TODO: handle case where Promise does not resolve nicely
             try {
                 PlaylistEditor.AddSong({
@@ -104,6 +104,8 @@ const addSongHandler = () => {
             } finally {
                 View.SetState({ loading: false }); // code smell!!!
             }
+        }).catch((reason) => {
+            throw new Error(`Could not get current song with error: ${reason}`);
         });
     } catch (err) {
         // TODO: send err as telemetry
