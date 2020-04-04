@@ -1,3 +1,5 @@
+import { Utils } from './utils.mjs'
+
 let mostRecentTrackUri = undefined, player = undefined;
 const Player = {
     IsConnected: false,
@@ -11,11 +13,7 @@ const Player = {
 }
 
 Player.Init = () => {
-    if (Player.BearerToken === undefined) {
-        console.log("ERROR: Cannot initialize Player without bearer token.")
-        return;
-    }
-
+    Utils.ThrowIfNullOrUndefined(Player.BearerToken);
     player = new Spotify.Player({
       name: 'Muze Radio',
       getOAuthToken: cb => { cb(Player.BearerToken); }
@@ -66,12 +64,9 @@ Player.Init = () => {
 };
 
 Player.GetCurrentSong = () => {
-    if (player === undefined) {
-        console.log("ERROR: Cannot get current song because player is not initialized.");
-        return undefined;
-    } else if (Player.IsConnected == false) {
-        console.log("ERROR: Cannot get current song because player is disconnected.");
-        return undefined;
+    ThrowIfNullOrUndefined(player);
+    if (Player.IsConnected == false) {
+        throw new Error("Cannot get current song because player is disconnected.");
     }
 
     return player.getCurrentState().then((state) => {
@@ -86,15 +81,10 @@ Player.GetCurrentSong = () => {
 }
 
 Player.PlaySong = ({spotify_uri}) => {
-    if (spotify_uri === undefined) {
-        console.log("ERROR: Cannot play song because no spotify URI was specified.");
-        return false;
-    } else if (player === undefined) {
-        console.log("ERROR: Cannot play song because player is not initialized.");
-        return false;
-    } else if (Player.IsConnected == false) {
-        console.log("ERROR: Cannot play song because player is disconnected.");
-        return false;
+    Utils.ThrowIfNullOrUndefined(spotify_uri);
+    Utils.ThrowIfNullOrUndefined(player);
+    if (Player.IsConnected == false) {
+        throw new Error("Cannot play song because player is disconnected.");
     }
     return fetch(`https://api.spotify.com/v1/me/player/play?device_id=${player._options.id}`, {
         method: 'PUT',

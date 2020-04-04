@@ -36,7 +36,12 @@ socket.on('connect', () => {
 });
 
 socket.on('play song', async (data) => {
-  await Player.PlaySong({spotify_uri: data['spotify_uri']});
+  try {
+    await Player.PlaySong({spotify_uri: data['spotify_uri']});
+  } catch (err) {
+    // TODO: send err as telemetry
+    return;
+  }
   if (State.Streaming == false) {
     // TODO: confirm that indeed there is a song playing BEFORE presenting options
     // - surely I should be checking something like Player.IsPlaying?
@@ -55,8 +60,7 @@ socket.on('play song', async (data) => {
 
 socket.on('msg', (msgStr) => {
   View.SetState({loading: false}); // code smell!!!
-  // TODO: present messages in a user-friendly manner
-  alert(msgStr);
+  View.PresentMessage(msgStr);
 });
 
 Player.OnSongChange = ({songName, artistName, albumName, albumArtLink, songLink}) => {
@@ -68,24 +72,41 @@ Player.OnSongChange = ({songName, artistName, albumName, albumArtLink, songLink}
 };
 
 const recommendationHandler = ({recommendType}) => {
-  Player.GetCurrentSong().then(({spotify_uri, name}) => {
-    // TODO: handle case where Promise does not resolve nicely
-    socket.emit('get recommendation', {
-      'song': name,
-      'spotify_uri': spotify_uri,
-      'adjective': recommendType
+  try {
+    Player.GetCurrentSong().then(({spotify_uri, name}) => {
+      // TODO: handle case where Promise does not resolve nicely
+      socket.emit('get recommendation', {
+        'song': name,
+        'spotify_uri': spotify_uri,
+        'adjective': recommendType
+      });
     });
-  });
+  } catch (err) {
+    // TODO: send err as telemetry
+    View.PresentMessage("I... can't think of anything right now. Ask me again later :~)");
+  }
 }
 
 const addSongHandler = () => {
-  Player.GetCurrentSong().then(({spotify_uri, name}) => {
-    // TODO: handle case where Promise does not resolve nicely
-    PlaylistEditor.AddSong({
-      // TODO: parametrize. (placeholder: 'fizz buzz tangle' by jcgalleg)
-      spotifyPlaylistId: "2ZjWb4BpsCMNX22waSfNuq",
-      spotifyTrackUri: spotify_uri,
+  try {
+    Player.GetCurrentSong().then(({spotify_uri, name}) => {
+      // TODO: handle case where Promise does not resolve nicely
+      try {
+        PlaylistEditor.AddSong({
+          // TODO: parametrize. (placeholder: 'fizz buzz tangle' by jcgalleg)
+          spotifyPlaylistId: "2ZjWb4BpsCMNX22waSfNuq",
+          spotifyTrackUri: spotify_uri,
+        });
+        View.PresentMessage(`Added '${name}' to your playlist!`)
+      } catch (err) {
+        // TODO: send err as telemetry
+        View.PresentMessage(`Sorry, couldn't add '${name}' to your playlist.`)
+      } finally {
+        View.SetState({loading: false}); // code smell!!!
+      }
     });
-    View.SetState({loading: false}); // code smell!!!
-  });
+  } catch (err) {
+    // TODO: send err as telemetry
+    View.PresentMessage(`Sorry, couldn't add '${name}' to your playlist.`)
+  }
 };

@@ -1,17 +1,11 @@
+import { Utils } from './utils.mjs'
+
 const PlaylistEditor = {
     urlTemplateForAddingTracksToPlaylist: undefined,
     bearerToken: undefined,
     AddSong: ({spotifyPlaylistId, spotifyTrackUri}) => {
-        if (PlaylistEditor.urlTemplateForAddingTracksToPlaylist === undefined) {
-            console.log("ERROR: HTTP endpoint for adding songs playlist not initialized.");
-            console.log(`Aborting request to add '${spotifyTrackUri}' to playlist with ID: '${spotifyPlaylistId}'.`);
-            return;
-        }
-        if (PlaylistEditor.bearerToken === undefined) {
-            console.log("ERROR: bearer token not initialized in PlaylistEditor.");
-            console.log(`Aborting request to add '${spotifyTrackUri}' to playlist with ID: '${spotifyPlaylistId}'.`);
-            return;
-        }
+        Utils.ThrowIfNullOrUndefined(PlaylistEditor.urlTemplateForAddingTracksToPlaylist);
+        Utils.ThrowIfNullOrUndefined(PlaylistEditor.bearerToken);
         let endpoint = PlaylistEditor.urlTemplateForAddingTracksToPlaylist.For({
             playlistId: spotifyPlaylistId, trackUris: [spotifyTrackUri]
         });

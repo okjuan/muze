@@ -81,6 +81,11 @@ const View = {
     if (loading === false) {
       $('.loading').removeClass('loading');
     }
+  },
+
+  // TODO: present messages in a user-friendly manner
+  PresentMessage: (msg) => {
+    alert(msg);
   }
 }
 
