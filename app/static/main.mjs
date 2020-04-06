@@ -7,6 +7,8 @@ import { View } from './view.mjs'
 
 let bearerToken = SpotifyAuthHelper.GetBearerTokenFromUrl();
 Player.BearerToken = bearerToken;
+Player.TrackLink = SpotifyConfig.EndpointTemplates.TrackLink;
+Player.PlayEndpoint = SpotifyConfig.EndpointTemplates.PlaySong;
 window.onSpotifyWebPlaybackSDKReady = Player.Init;
 
 View.OnReady(() => {
@@ -40,9 +42,10 @@ socket.on('connect', () => {
 
 socket.on('play song', async (data) => {
     try {
-        await Player.PlaySong({ spotify_uri: data['spotify_uri'] });
+        await Player.PlaySong({spotify_uri: data['spotify_uri']});
     } catch (err) {
         // TODO: send err as telemetry
+        socket.emit ("get random song");
         return;
     }
     if (State.Streaming == false) {
@@ -52,7 +55,7 @@ socket.on('play song', async (data) => {
             recommendationHandler: recommendationHandler,
             randomSongHandler: () => socket.emit("get random song"),
         });
-        View.PresentPlaylistEditorControls({ addSongHandler: addSongHandler });
+        View.PresentPlaylistEditorControls({addSongHandler: addSongHandler});
     }
     State.Streaming = true;
 
@@ -74,44 +77,43 @@ Player.OnSongChange = ({ songName, artistName, albumName, albumArtLink, songLink
     })
 };
 
-const recommendationHandler = ({ recommendType }) => {
+const recommendationHandler = async ({recommendType}) => {
     try {
-        Player.GetCurrentSong().then(({ spotify_uri, name }) => {
-            // TODO: handle case where Promise does not resolve nicely
-            socket.emit('get recommendation', {
-                'song': name,
-                'spotify_uri': spotify_uri,
-                'adjective': recommendType
-            });
-        });
+        var {spotifyUri, songName } = await Player.GetCurrentSong();
     } catch (err) {
         // TODO: send err as telemetry
         View.PresentMessage("I... can't think of anything right now. Ask me again later :~)");
     }
+    socket.emit('get recommendation', {
+        'song': songName,
+        'spotify_uri': spotifyUri,
+        'adjective': recommendType
+    });
 }
 
-const addSongHandler = () => {
+const addSongHandler = async () => {
     try {
-        Player.GetCurrentSong().then(({spotify_uri, name}) => {
-            // TODO: handle case where Promise does not resolve nicely
-            try {
-                PlaylistEditor.AddSong({
-                    // TODO: parametrize. (placeholder: 'fizz buzz tangle' by jcgalleg)
-                    spotifyPlaylistId: "2ZjWb4BpsCMNX22waSfNuq",
-                    spotifyTrackUri: spotify_uri,
-                });
-                View.PresentMessage(`Added '${name}' to your playlist!`)
-            } catch (err) {
-                // TODO: send err as telemetry
-                View.PresentMessage(`Sorry, couldn't add '${name}' to your playlist.`)
-            } finally {
-                View.SetState({ loading: false }); // code smell!!!
-            }
-        }).catch((reason) => {
-            throw new Error(`Could not get current song with error: ${reason}`);
+        var {spotifyUri, songName} = await Player.GetCurrentSong();
+    } catch (err) {
+        View.PresentMessage(`Sorry, couldn't add '${songName}' to your playlist.`);
+        return;
+    }
+
+    try {
+        var success = await PlaylistEditor.AddSong({
+            spotifyPlaylistId: "5EBSl6dF8hzu9KE0IYxM21",
+            spotifyTrackUri: spotifyUri,
         });
     } catch (err) {
         // TODO: send err as telemetry
-        View.PresentMessage(`Sorry, couldn't add '${name}' to your playlist.`)
+        View.PresentMessage(`Sorry, couldn't add '${songName}' to your playlist.`)
+        return;
     }
+
+    if (success) {
+        View.PresentMessage(`Added '${songName}' to your playlist!`);
+    } else {
+        View.PresentMessage(`Sorry, couldn't add '${songName}' to your playlist.`)
+    }
+    View.SetState({ loading: false }); // code smell!!!
 };

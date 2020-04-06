@@ -12,7 +12,7 @@ const Player = {
     BearerToken: undefined
 }
 
-Player.Init = () => {
+Player.Init = async () => {
     Utils.ThrowIfNullOrUndefined(Player.BearerToken);
     player = new Spotify.Player({
       name: 'Muze Radio',
@@ -38,8 +38,6 @@ Player.Init = () => {
       console.log('Device ID has gone offline', device_id);
     });
 
-    // Event https://developer.spotify.com/documentation/web-playback-sdk/reference/#event-player-state-changed
-    // Obj. https://developer.spotify.com/documentation/web-playback-sdk/reference/#object-web-playback-state
     player.addListener('player_state_changed', ({ track_window: { current_track } }) => {
         if (current_track !== undefined && current_track['uri'] !== mostRecentTrackUri) {
             Player.OnSongChange({
@@ -47,38 +45,40 @@ Player.Init = () => {
                 artistName: current_track['artists'][0]['name'],
                 albumName: current_track['album']['name'],
                 albumArtLink: current_track['album']['images'][0]['url'],
-                songLink: `https://open.spotify.com/track/${current_track['id']}`
+                songLink: Player.TrackLink.For({trackUri: current_track['id']})
             })
         }
     });
 
-    player.connect().then((success) => {
+    try {
+        var success = await player.connect();
+    } catch (err) {
+        Player.IsConnected = false;
+        throw new Error("ERROR: could not connect player");
+    } finally {
         if (success) {
             console.log("Connected player!");
-            Player.IsConnected = true;
+            Player.IsConnected = success;
         } else {
-            console.log("ERROR: could not connect player");
             Player.IsConnected = false;
+            throw new Error("ERROR: could not connect player");
         }
-    });
+    }
 };
 
-Player.GetCurrentSong = () => {
+Player.GetCurrentSong = async () => {
     Utils.ThrowIfNullOrUndefined(player);
     if (Player.IsConnected == false) {
         throw new Error("Cannot get current song because player is disconnected.");
     }
-    return new Promise((resolve, reject) => {
-        player.getCurrentState().then((state) => {
-            if (!state) {
-                reject("Failed to retrieve state of player.");
-            }
-            resolve({
-                spotify_uri: state.track_window.current_track.uri,
-                name: state.track_window.current_track.name
-            });
-        });
-    });
+    var state = await player.getCurrentState();
+    if (!state) {
+        throw new Error("Couldn't get current song because player's state was undefined.");
+    }
+    return {
+        spotifyUri: state.track_window.current_track.uri,
+        songName: state.track_window.current_track.name
+    };
 }
 
 Player.PlaySong = ({spotify_uri}) => {
@@ -87,7 +87,7 @@ Player.PlaySong = ({spotify_uri}) => {
     if (Player.IsConnected == false) {
         throw new Error("Cannot play song because player is disconnected.");
     }
-    return fetch(`https://api.spotify.com/v1/me/player/play?device_id=${player._options.id}`, {
+    return fetch(Player.PlayEndpoint.For({deviceId: player._options.id}), {
         method: 'PUT',
         body: JSON.stringify({ uris: [spotify_uri] }),
         headers: {
