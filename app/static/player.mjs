@@ -9,6 +9,7 @@ const Player = {
     OnSongChange: ({songName, artistName, albumName, albumArtLink, songLink}) => {
         console.log("Now Playing " + songName + " by " + artistName);
     },
+    OnSongEnd: () => { },
     BearerToken: undefined
 }
 
@@ -38,15 +39,26 @@ Player.Init = async () => {
       console.log('Device ID has gone offline', device_id);
     });
 
-    player.addListener('player_state_changed', ({ track_window: { current_track } }) => {
-        if (current_track !== undefined && current_track['uri'] !== mostRecentTrackUri) {
+    player.addListener('player_state_changed', ({
+        duration,
+        position,
+        track_window: {current_track}
+    }) => {
+        if (current_track === undefined) {
+            return;
+        }
+        if (current_track['uri'] !== mostRecentTrackUri) {
             Player.OnSongChange({
                 songName: current_track['name'],
                 artistName: current_track['artists'][0]['name'],
                 albumName: current_track['album']['name'],
                 albumArtLink: current_track['album']['images'][0]['url'],
                 songLink: Player.TrackLink.For({trackUri: current_track['id']})
-            })
+            });
+            mostRecentTrackUri = current_track['id'];
+        }
+        if (position === duration) {
+            Player.OnSongEnd();
         }
     });
 

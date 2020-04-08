@@ -5,15 +5,37 @@ import { Player } from './player.mjs'
 import { View } from './view.mjs'
 
 
-let bearerToken = SpotifyAuthHelper.GetBearerTokenFromUrl();
-Player.BearerToken = bearerToken;
+const State = {
+    BearerToken: SpotifyAuthHelper.GetBearerTokenFromUrl(),
+    Streaming: false,
+    SongQueue: [],
+    WaitingForNewSong: true
+};
+
+Player.BearerToken = State.BearerToken;
+
 Player.TrackLink = SpotifyConfig.EndpointTemplates.TrackLink;
+
 Player.PlayEndpoint = SpotifyConfig.EndpointTemplates.PlaySong;
+
+Player.OnSongChange = ({ songName, artistName, albumName, albumArtLink, songLink }) => {
+    View.UpdateCurrentlyPlaying({
+        song: { name: songName, link: songLink },
+        artist: { name: artistName },
+        album: { name: albumName, coverLink: albumArtLink }
+    })
+};
+
+Player.OnSongEnd = async () => {
+    if (State.SongQueue.length > 0) {
+        await playSong(State.SongQueue.shift());
+    }
+}
 window.onSpotifyWebPlaybackSDKReady = Player.Init;
 
 View.OnReady(() => {
     View.PresentSinglePlayButton({ clickHandler: () => {
-        if (bearerToken === undefined) {
+        if (State.BearerToken === undefined) {
             SpotifyAuthHelper.RedirectToLogin({
                 authEndpointTemplate: SpotifyConfig.EndpointTemplates.AuthToken,
                 clientId: SpotifyConfig.Auth.ClientId,
@@ -28,39 +50,25 @@ View.OnReady(() => {
 
 const PlaylistEditor = GetPlaylistEditor({
     urlTemplateForAddingTracksToPlaylist: SpotifyConfig.EndpointTemplates.AddTracksToPlaylist,
-    bearerToken: bearerToken
+    bearerToken: State.BearerToken
 });
-
-const State = {
-    Streaming: false
-};
 
 var socket = io.connect(AppConfig.AppIndexUrl);
 socket.on('connect', () => {
     socket.emit('start session');
 });
 
-socket.on('play song', async (data) => {
-    try {
-        await Player.PlaySong({spotify_uri: data['spotify_uri']});
-    } catch (err) {
-        // TODO: send err as telemetry
-        socket.emit ("get random song");
-        return;
+socket.on('new song', async (data) => {
+    let spotifyUris = data['spotify_uris'];
+    if (spotifyUris.length === 0) {
+        View.PresentMessage("Could not get recommendations :(");
     }
-    if (State.Streaming == false) {
-        // TODO: confirm that indeed there is a song playing BEFORE presenting options
-        // - surely I should be checking something like Player.IsPlaying?
-        View.PresentRecommendationControls({
-            recommendationHandler: recommendationHandler,
-            randomSongHandler: () => socket.emit("get random song"),
-        });
-        View.PresentPlaylistEditorControls({addSongHandler: addSongHandler});
+    if (State.WaitingForNewSong) {
+        State.WaitingForNewSong = false;
+        await playSong(spotifyUris[0]);
+        spotifyUris = spotifyUris.slice(1);
     }
-    State.Streaming = true;
-
-    // code smell: is it really necessary to expose this method? couldn't we instead
-    //             update the state when the View updates?
+    State.SongQueue.push(...spotifyUris);
     View.SetState({ loading: false }); // code smell!!!
 });
 
@@ -69,13 +77,35 @@ socket.on('msg', (msgStr) => {
     View.PresentMessage(msgStr);
 });
 
-Player.OnSongChange = ({ songName, artistName, albumName, albumArtLink, songLink }) => {
-    View.UpdateCurrentlyPlaying({
-        song: { name: songName, link: songLink },
-        artist: { name: artistName },
-        album: { name: albumName, coverLink: albumArtLink }
-    })
-};
+const playSong = async (spotifyUri) => {
+    try {
+        await Player.PlaySong({spotify_uri: spotifyUri});
+    } catch (err) {
+        // TODO: send err as telemetry
+        View.PresentMessage("Couldn't play song :( Please try again later");
+        return;
+    }
+    if (State.Streaming == false) {
+        // TODO: confirm that indeed there is a song playing BEFORE presenting options
+        // - surely I should be checking something like Player.IsPlaying?
+        View.PresentRecommendationControls({
+            recommendationHandler: recommendationHandler,
+            randomSongHandler: randomSongHandler,
+        });
+        View.PresentPlaylistEditorControls({addSongHandler: addSongHandler});
+    }
+    State.Streaming = true;
+
+    // code smell: is it really necessary to expose this method? couldn't we instead
+    //             update the state when the View updates?
+    View.SetState({ loading: false }); // code smell!!!
+}
+
+const randomSongHandler = () => {
+    State.SongQueue = [];
+    State.WaitingForNewSong = true;
+    socket.emit("get random song");
+}
 
 const recommendationHandler = async ({recommendType}) => {
     try {
@@ -84,6 +114,8 @@ const recommendationHandler = async ({recommendType}) => {
         // TODO: send err as telemetry
         View.PresentMessage("I... can't think of anything right now. Ask me again later :~)");
     }
+    State.SongQueue = [];
+    State.WaitingForNewSong = true
     socket.emit('get recommendation', {
         'song': songName,
         'spotify_uri': spotifyUri,
