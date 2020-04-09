@@ -13,9 +13,7 @@ const State = {
 };
 
 Player.BearerToken = State.BearerToken;
-
 Player.TrackLink = SpotifyConfig.EndpointTemplates.TrackLink;
-
 Player.PlayEndpoint = SpotifyConfig.EndpointTemplates.PlaySong;
 
 Player.OnSongChange = ({ songName, artistName, albumName, albumArtLink, songLink }) => {

@@ -15,6 +15,10 @@ const Player = {
 
 Player.Init = async () => {
     Utils.ThrowIfNullOrUndefined(Player.BearerToken);
+    if (Player.BearerToken === undefined) {
+        console.log("Cannot initialize web player until user signs in.");
+        return;
+    }
     player = new Spotify.Player({
       name: 'Muze Radio',
       getOAuthToken: cb => { cb(Player.BearerToken); }

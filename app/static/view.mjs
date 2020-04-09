@@ -31,6 +31,7 @@ const View = {
     PresentRecommendationControls: ({ recommendationHandler, randomSongHandler }) => {
         if (View.RecommendationButtons === undefined) {
             View.RecommendationButtons = getRecommendationButtons(recommendationHandler, randomSongHandler);
+            View.RecommendationButtons.map(btn => btn.hide());
         }
 
         let controlsContainer = $('#player-controls-container');
@@ -42,10 +43,12 @@ const View = {
         let currentPlayerControls = controlsContainer.children();
         if (currentPlayerControls.length === 0) {
             controlsContainer.appendTo(View.RecommendationButtons);
+            View.RecommendationButtons.show('slow');
 
         } else {
             currentPlayerControls.hide('slow', () => {
                 controlsContainer.append(View.RecommendationButtons);
+                View.RecommendationButtons.map(btn => btn.show('slow'));
                 currentPlayerControls.remove();
             });
         }
