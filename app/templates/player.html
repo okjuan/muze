@@ -12,54 +12,58 @@
 -->
 
 <html>
+
 <head>
-  <title>Muze Radio</title>
-  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Muze Radio</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='style.css') }}" />
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='style.css') }}" />
 
-  <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
-  <script src="https://sdk.scdn.co/spotify-player.js"></script>
-  <link rel="stylesheet" href="https://unpkg.com/spectre.css/dist/spectre.min.css">
-  <link rel="stylesheet" href="https://unpkg.com/spectre.css/dist/spectre-icons.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+    <script src="https://sdk.scdn.co/spotify-player.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/spectre.css/dist/spectre.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/spectre.css/dist/spectre-icons.min.css">
 
 
-  <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/socket.io/1.3.6/socket.io.min.js"></script>
-  <script type="module" src="{{ url_for('static', filename='main.mjs') }}"></script>
+    <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/socket.io/1.3.6/socket.io.min.js"></script>
+    <script type="module" src="{{ url_for('static', filename='main.mjs') }}"></script>
 </head>
 
 <body class="bg-gray">
-  <div class="container">
-    <div class="columns">
-      <div class="column col-10 col-mx-auto">
-        <div id="main-content">
-          <h1 class="text-primary" id="title">Muze Radio</h2>
-          <div id="player-controls-container">
-            <button id="random-song" class="btn btn-primary btn-lg">Play a song</button>
-          </div>
-          <div class="card bg-gray" id="music-metadata-container">
-            <div class="card-image">
-              <a id="album-art-link" target="_blank">
-                <img id="album-art" />
-              </a>
-            </div>
+    <div class="container">
+        <div class="columns">
+            <div class="column col-10 col-mx-auto">
+                <div id="main-content">
+                    <h1 class="text-primary" id="title">Muze Radio</h2>
+                        <div id="player-controls-container">
+                            <button id="random-song" class="btn btn-primary btn-lg">Play a song</button>
+                        </div>
+                        <div class="card bg-gray" id="music-metadata-container">
+                            <div class="card-image">
+                                <a id="album-art-link" target="_blank">
+                                    <img id="album-art" />
+                                </a>
+                            </div>
 
-            <div class="chip track-metadata" id="track-name">Song Name</div>
-            <div class="chip track-metadata" id="artist-name">Artist Name</div>
-            <div class="chip track-metadata" id="album-name">Album Name</div>
+                            <div class="chip track-metadata" id="track-name">Song Name</div>
+                            <div class="chip track-metadata" id="artist-name">Artist Name</div>
+                            <div class="chip track-metadata" id="album-name">Album Name</div>
 
-            <div id="branding-container">
-              <img id="spotify-logo" src="{{ url_for('static', filename='imgs/Spotify_Logo_RGB_Black.png') }}" />
-              <img id="spotify-icon" src="{{ url_for('static', filename='imgs/Spotify_Icon_RGB_Black.png') }}" />
+                            <div id="branding-container">
+                                <img id="spotify-logo"
+                                    src="{{ url_for('static', filename='imgs/Spotify_Logo_RGB_Black.png') }}" />
+                                <img id="spotify-icon"
+                                    src="{{ url_for('static', filename='imgs/Spotify_Icon_RGB_Black.png') }}" />
+                            </div>
+                        </div>
+                        <div id="playlist-controls"></div>
+                </div>
             </div>
-          </div>
-          <div id="playlist-controls"></div>
         </div>
-      </div>
     </div>
-  </div>
 
-  <link href="https://fonts.googleapis.com/css?family=Titillium+Web:200" rel="stylesheet" type="text/css">
+    <link href="https://fonts.googleapis.com/css?family=Titillium+Web:200" rel="stylesheet" type="text/css">
 </body>
+
 </html>
