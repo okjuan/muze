@@ -19,7 +19,7 @@ const View = {
         let songLinkElem = $('#album-art-link');
         songLinkElem.attr('href', song.link);
 
-        $('#music-metadata-container').css('display', 'block');
+        $('#player').css('display', 'flex');
     },
     PresentSinglePlayButton: ({ clickHandler }) => {
         // default view contains button for playing random song

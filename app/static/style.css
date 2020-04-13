@@ -6,6 +6,14 @@ body {
   text-align: center;
 }
 
+#prev-song-btn {
+    padding: 1%;
+}
+
+#next-song-btn {
+    padding: 1%;
+}
+
 #main-content {
   margin: 10vh auto;
   width: 80%;
@@ -36,10 +44,14 @@ body {
   box-sizing: content-box;
 }
 
-#music-metadata-container {
-  /* initially hidden */
+/* initially hidden */
+#player {
   display: none;
+  border: none;
+  margin: 0 auto;
+}
 
+#music-metadata-container {
   border: none;
   width: 50%;
   margin: 0 auto;
@@ -47,8 +59,12 @@ body {
 
 #album-art {
   padding: 2vmin;
-  height: 30vmin;
-  width: 30vmin;
+  max-height: 30vmin;
+  max-width: 30vmin;
+  height: auto;
+  width: auto;
+  display: block;
+  margin: 0 auto;
 }
 
 .track-metadata {

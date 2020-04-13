@@ -39,22 +39,34 @@
                         <div id="player-controls-container">
                             <button id="random-song" class="btn btn-primary btn-lg">Play a song</button>
                         </div>
-                        <div class="card bg-gray" id="music-metadata-container">
-                            <div class="card-image">
-                                <a id="album-art-link" target="_blank">
-                                    <img id="album-art" />
-                                </a>
+                        <div id="player" class="columns col-gapless">
+                            <div class="column col-2 col-mx-auto">
+                                <button id="prev-song-btn" class="btn btn-action btn-primary btn-lg s-circle">
+                                    <i class="icon icon-arrow-left"></i>
+                                </button>
                             </div>
+                            <div class="column col-6" id="music-metadata-container">
+                                <div>
+                                    <a id="album-art-link" target="_blank">
+                                        <img id="album-art" class="img-responsive" alt="album-cover"/>
+                                    </a>
+                                </div>
 
-                            <div class="chip track-metadata" id="track-name">Song Name</div>
-                            <div class="chip track-metadata" id="artist-name">Artist Name</div>
-                            <div class="chip track-metadata" id="album-name">Album Name</div>
+                                <div class="chip track-metadata" id="track-name">Song Name</div>
+                                <div class="chip track-metadata" id="artist-name">Artist Name</div>
+                                <div class="chip track-metadata" id="album-name">Album Name</div>
 
-                            <div id="branding-container">
-                                <img id="spotify-logo"
-                                    src="{{ url_for('static', filename='imgs/Spotify_Logo_RGB_Black.png') }}" />
-                                <img id="spotify-icon"
-                                    src="{{ url_for('static', filename='imgs/Spotify_Icon_RGB_Black.png') }}" />
+                                <div id="branding-container">
+                                    <img id="spotify-logo"
+                                        src="{{ url_for('static', filename='imgs/Spotify_Logo_RGB_Black.png') }}" />
+                                    <img id="spotify-icon"
+                                        src="{{ url_for('static', filename='imgs/Spotify_Icon_RGB_Black.png') }}" />
+                                </div>
+                            </div>
+                            <div class="column col-2 col-mx-auto">
+                                <button id="next-song-btn" class="btn btn-action btn-primary btn-lg s-circle">
+                                    <i class="icon icon-arrow-right"></i>
+                                </button>
                             </div>
                         </div>
                         <div id="playlist-controls"></div>
