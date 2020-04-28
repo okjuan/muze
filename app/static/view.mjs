@@ -1,5 +1,6 @@
 const View = {
     RecommendationButtons: undefined,
+    ShowingRecommendationButtons: false,
     OnReady: (loadView) => {
         $(document).ready(loadView());
     },
@@ -52,6 +53,7 @@ const View = {
                 currentPlayerControls.remove();
             });
         }
+        View.ShowingRecommendationButtons = true;
     },
 
     PresentPlaylistEditorControls: ({ addSongHandler }) => {

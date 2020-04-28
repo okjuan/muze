@@ -7,7 +7,6 @@ import { View } from './view.mjs'
 
 const State = {
     BearerToken: SpotifyAuth.GetBearerTokenFromUrl(),
-    Streaming: false,
     SongQueue: [],
     WaitingForNewSong: true
 };
@@ -86,16 +85,19 @@ const playSong = async (spotifyUri) => {
         View.PresentMessage("Couldn't play song :( Please try again later");
         return;
     }
-    if (State.Streaming == false) {
+    if (View.ShowingRecommendationButtons === false) {
         // TODO: confirm that indeed there is a song playing BEFORE presenting options
         // - surely I should be checking something like Player.IsPlaying?
-        View.PresentRecommendationControls({
-            recommendationHandler: recommendationHandler,
-            randomSongHandler: randomSongHandler,
-        });
-        View.PresentPlaylistEditorControls({addSongHandler: addSongHandler});
+        showPlayerControls();
     }
-    State.Streaming = true;
+}
+
+const showPlayerControls = async () => {
+    View.PresentRecommendationControls({
+        recommendationHandler: recommendationHandler,
+        randomSongHandler: randomSongHandler,
+    });
+    View.PresentPlaylistEditorControls({addSongHandler: addSongHandler});
 
     // code smell: is it really necessary to expose this method? couldn't we instead
     //             update the state when the View updates?
