@@ -1,12 +1,12 @@
 import { AppConfig, SpotifyConfig } from './config.mjs'
-import { SpotifyAuthHelper } from './auth.mjs'
+import { SpotifyAuth } from './auth.mjs'
 import { GetPlaylistEditor } from './playlistEditor.mjs'
 import { Player } from './player.mjs'
 import { View } from './view.mjs'
 
 
 const State = {
-    BearerToken: SpotifyAuthHelper.GetBearerTokenFromUrl(),
+    BearerToken: SpotifyAuth.GetBearerTokenFromUrl(),
     Streaming: false,
     SongQueue: [],
     WaitingForNewSong: true
@@ -16,12 +16,12 @@ Player.BearerToken = State.BearerToken;
 Player.TrackLink = SpotifyConfig.EndpointTemplates.TrackLink;
 Player.PlayEndpoint = SpotifyConfig.EndpointTemplates.PlaySong;
 
-Player.OnSongChange = ({ songName, artistName, albumName, albumArtLink, songLink }) => {
+Player.OnSongChange = ({songName, artistName, albumName, albumArtLink, songLink}) => {
     View.UpdateCurrentlyPlaying({
         song: { name: songName, link: songLink },
         artist: { name: artistName },
         album: { name: albumName, coverLink: albumArtLink }
-    })
+    });
 };
 
 Player.OnSongEnd = async () => {
@@ -29,12 +29,13 @@ Player.OnSongEnd = async () => {
         await playSong(State.SongQueue.shift());
     }
 }
+
 window.onSpotifyWebPlaybackSDKReady = Player.Init;
 
 View.OnReady(() => {
     View.PresentSinglePlayButton({ clickHandler: () => {
         if (State.BearerToken === undefined) {
-            SpotifyAuthHelper.RedirectToLogin({
+            SpotifyAuth.RedirectToLogin({
                 authEndpointTemplate: SpotifyConfig.EndpointTemplates.AuthToken,
                 clientId: SpotifyConfig.Auth.ClientId,
                 authScopes: SpotifyConfig.Auth.Scopes,

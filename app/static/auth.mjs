@@ -6,7 +6,7 @@
     Sets up Spotify web player.
 */
 
-const SpotifyAuthHelper = {
+const SpotifyAuth = {
     GetBearerTokenFromUrl: () => {
         // Adapted from https://glitch.com/edit/#!/spotify-implicit-grant
         // get bearer token
@@ -34,4 +34,4 @@ const SpotifyAuthHelper = {
     }
 }
 
-export { SpotifyAuthHelper }
+export { SpotifyAuth }
