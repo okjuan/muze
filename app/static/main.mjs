@@ -146,5 +146,6 @@ const addSongHandler = async () => {
     } else {
         View.PresentMessage(`Sorry, couldn't add '${songName}' to your playlist.`)
     }
-    View.SetState({ loading: false }); // code smell!!!
+    // code smell!!!
+    View.SetState({ loading: false });
 };
