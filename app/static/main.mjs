@@ -68,11 +68,13 @@ socket.on('new song', async (data) => {
         spotifyUris = spotifyUris.slice(1);
     }
     State.SongQueue.push(...spotifyUris);
-    View.SetState({ loading: false }); // code smell!!!
+    // code smell!!!
+    View.SetState({ loading: false });
 });
 
 socket.on('msg', (msgStr) => {
-    View.SetState({ loading: false }); // code smell!!!
+    // code smell!!!
+    View.SetState({ loading: false });
     View.PresentMessage(msgStr);
 });
 
@@ -97,7 +99,7 @@ const playSong = async (spotifyUri) => {
 
     // code smell: is it really necessary to expose this method? couldn't we instead
     //             update the state when the View updates?
-    View.SetState({ loading: false }); // code smell!!!
+    View.SetState({ loading: false });
 }
 
 const randomSongHandler = () => {
@@ -146,6 +148,7 @@ const addSongHandler = async () => {
     } else {
         View.PresentMessage(`Sorry, couldn't add '${songName}' to your playlist.`)
     }
+
     // code smell!!!
     View.SetState({ loading: false });
 };
