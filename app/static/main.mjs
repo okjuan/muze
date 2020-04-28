@@ -25,7 +25,7 @@ Player.OnSongChange = ({songName, artistName, albumName, albumArtLink, songLink}
 
 Player.OnSongEnd = async () => {
     if (State.SongQueue.length > 0) {
-        await playSong(State.SongQueue.shift());
+        playSong(State.SongQueue.shift());
     }
 }
 
@@ -63,7 +63,7 @@ socket.on('new song', async (data) => {
     }
     if (State.WaitingForNewSong) {
         State.WaitingForNewSong = false;
-        await playSong(spotifyUris[0]);
+        playSong(spotifyUris[0]);
         spotifyUris = spotifyUris.slice(1);
     }
     State.SongQueue.push(...spotifyUris);
